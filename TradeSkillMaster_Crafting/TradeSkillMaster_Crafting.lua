@@ -67,6 +67,8 @@ function TSM:OnEnable()
 			end
 		end
 	end
+	-- if currently casting a spell, keep track of the id
+	TSM.currentspell = nil
 	if TSM.db.factionrealm.mats["item:52510"] then
 		local name = TSMAPI:GetSafeItemInfo("item:52510:0:0:0:0:0:0") or nil
 		TSM.db.factionrealm.mats["item:52510:0:0:0:0:0:0"] = {}

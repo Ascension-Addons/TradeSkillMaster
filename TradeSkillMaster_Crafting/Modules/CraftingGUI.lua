@@ -85,6 +85,7 @@ function GUI:OnEnable()
 	GUI:RegisterEvent("TRADE_SKILL_FILTER_UPDATE", "EventHandler")
 	GUI:RegisterEvent("UPDATE_TRADESKILL_RECAST", "EventHandler")
 	GUI:RegisterEvent("CHAT_MSG_SKILL", "EventHandler")
+	GUI:RegisterEvent("UNIT_SPELLCAST_START", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_FAILED", "EventHandler")
@@ -248,18 +249,21 @@ function GUI:EventHandler(event, ...)
 				TSM.db.factionrealm.tradeSkills[UnitName("player")][skillName].level = level
 				TSM.db.factionrealm.tradeSkills[UnitName("player")][skillName].maxLevel = maxLevel
 			end
+		elseif event == "UNIT_SPELLCAST_START" then
+			local unit = ...
+			if unit ~= "player" then return end
+			TSM.currentspell = UnitCastingSpellID("player")
 		elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
-			-- local unit, _, _, _, spellID = ... -- parameter ... doesn't provide spellID in 3.3.5a
-			local unit, spellName = ...
-			local spellID = TSM.SpellName2ID[spellName]
-			
+			-- we only care about our spells
+			local unit = ...
+			if unit ~= "player" then return end
+			-- if spell is not related to crafting, ignore
+			local craft = TSM.currentspell and TSM.db.factionrealm.crafts[TSM.currentspell]
+			if not craft then return end
 			-- if spellID == nil then
 				-- TSM:Printf("Could not find spellID for %s", spellName)
 			-- end
 			
-			local craft = spellID and TSM.db.factionrealm.crafts[spellID]
-			if unit ~= "player" or not craft then return end
-
 			-- decrements the number of this craft that are queued to be crafted
 			craft.queued = craft.queued - 1
 			if GUI.isCrafting and GUI.isCrafting.quantity > 0 then
@@ -268,19 +272,17 @@ function GUI:EventHandler(event, ...)
 					--GUI:UpdateQueue()
 				end
 			end		
-		
+			TSM.currentspell = nil
 			-- TSMAPI:CreateTimeDelay("craftingQueueUpdateThrottle", 0.2, GUI.UpdateQueue)
 		elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_FAILED_QUIET" then
-			-- local unit, _, _, _, spellID = ... -- parameter ... doesn't provide spellID in 3.3.5a
-			local unit, spellName = ...
-			local spellID = TSM.SpellName2ID[spellName]
+			local unit = ...
+			if unit ~= "player" then return end
 
 			-- if spellID == nil then
 				-- TSM:Printf("Could not find spellID for %s", spellName)
 			-- end
 			
-			if unit ~= "player" then return end
-			if GUI.isCrafting and spellID == GUI.isCrafting.spellID then
+			if GUI.isCrafting and TSM.currentspell == GUI.isCrafting.spellID then
 				GUI.isCrafting.quantity = 0
 				TSMAPI:CreateTimeDelay("craftingQueueUpdateThrottle", 0.2, GUI.UpdateQueue)
 			end
