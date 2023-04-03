@@ -310,7 +310,7 @@ function GUI:UpdateTradeSkills()
 	local skillName, header
 	local tradeSkill1, tradeSkill2, cook, firstAid
 
-	for i = 5, 8 do
+	for i = 1, GetNumSkillLines() do
 		skillName = GetSkillLineInfo(i)
 		if  skillName == "Professions" then --TRADE_SKILLS ) then
 			tradeSkill1, header = GetSkillLineInfo(i + 1);
@@ -326,14 +326,7 @@ function GUI:UpdateTradeSkills()
 			else
 				tradeSkill2=i+2
 			end
-			break
-		end
-	end
-	
-	
-	for i = 5, 10 do
-		skillName = GetSkillLineInfo(i)
-		if  skillName == "Cooking" then
+		elseif  skillName == "Cooking" then
 			cook = i
 		elseif skillName == "First Aid" then
 			firstAid = i
