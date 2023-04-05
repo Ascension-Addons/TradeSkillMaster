@@ -43,7 +43,7 @@ function Queue:CreateRestockQueue(groupInfo)
 				for itemString in pairs(data.items) do
 					itemString = TSMAPI:GetItemString(itemString)
 					local spellID = TSM.craftReverseLookup[itemString] and TSM.craftReverseLookup[itemString][1]
-					if spellID and TSM.db.factionrealm.crafts[spellID] then
+					if spellID and TSM.db.realm.crafts[spellID] then
 						local maxQueueCount = max(opSettings.maxRestock - TSM.Inventory:GetTotalQuantity(itemString), 0)
 						local numToQueue = 0
 
@@ -60,7 +60,7 @@ function Queue:CreateRestockQueue(groupInfo)
 							end
 						end
 
-						local craft = TSM.db.factionrealm.crafts[spellID]
+						local craft = TSM.db.realm.crafts[spellID]
 						craft.queued = floor(numToQueue / craft.numResult)
 						craft.queued = craft.queued >= opSettings.minRestock and craft.queued or 0
 						if craft.queued > 0 then
@@ -84,12 +84,12 @@ function Queue:HasLoop(itemString, steps, visited)
 	if visited[itemString] then return true end
 	visited[itemString] = true
 	local craftCost = TSM:GetCustomPrice("Crafting", itemString)
-	local mat = TSM.db.factionrealm.mats[itemString]
+	local mat = TSM.db.realm.mats[itemString]
 	local lowestCost = TSM:GetCustomPrice(mat.customValue or TSM.db.global.defaultMatCostMethod, itemString)
 	if craftCost and lowestCost and craftCost <= lowestCost and (not TSM.db.global.neverCraftInks or not TSMAPI.InkConversions[itemString]) then
 		local spellID = TSM.Cost:GetLowestCraftPrices(itemString, true)
-		if spellID and TSM.db.factionrealm.crafts[spellID] then
-			for matItemString in pairs(TSM.db.factionrealm.crafts[spellID].mats) do
+		if spellID and TSM.db.realm.crafts[spellID] then
+			for matItemString in pairs(TSM.db.realm.crafts[spellID].mats) do
 				if Queue:HasLoop(matItemString, steps, CopyTable(visited)) then
 					return true
 				end
@@ -123,18 +123,18 @@ function Queue:GetIntermediateCrafts(mats, usedItems, usedMats, tempMats)
 			end
 
 			if quantity > 0 and not Queue:HasLoop(itemString, 0, {}) then
-				local mat = TSM.db.factionrealm.mats[itemString]
+				local mat = TSM.db.realm.mats[itemString]
 				local craftCost = TSM:GetCustomPrice("Crafting", itemString)
 				local lowestCost = TSM:GetCustomPrice(mat.customValue or TSM.db.global.defaultMatCostMethod, itemString)
 				if craftCost and lowestCost and craftCost <= lowestCost and (not TSM.db.global.neverCraftInks or not TSMAPI.InkConversions[itemString]) then
 					local spellID = TSM.Cost:GetLowestCraftPrices(itemString, true)
-					if spellID and TSM.db.factionrealm.crafts[spellID] then
-						local numResult = TSM.db.factionrealm.crafts[spellID].numResult
+					if spellID and TSM.db.realm.crafts[spellID] then
+						local numResult = TSM.db.realm.crafts[spellID].numResult
 						quantity = ceil(quantity / numResult)
-						subCrafts[TSM.db.factionrealm.crafts[spellID].profession] = subCrafts[TSM.db.factionrealm.crafts[spellID].profession] or {}
-						subCrafts[TSM.db.factionrealm.crafts[spellID].profession][spellID] = (subCrafts[TSM.db.factionrealm.crafts[spellID].profession][spellID] or 0) + quantity
-						TSM.db.factionrealm.crafts[spellID].queued = TSM.db.factionrealm.crafts[spellID].queued + quantity
-						TSM.db.factionrealm.crafts[spellID].intermediateQueued = (TSM.db.factionrealm.crafts[spellID].intermediateQueued or 0) + quantity
+						subCrafts[TSM.db.realm.crafts[spellID].profession] = subCrafts[TSM.db.realm.crafts[spellID].profession] or {}
+						subCrafts[TSM.db.realm.crafts[spellID].profession][spellID] = (subCrafts[TSM.db.realm.crafts[spellID].profession][spellID] or 0) + quantity
+						TSM.db.realm.crafts[spellID].queued = TSM.db.realm.crafts[spellID].queued + quantity
+						TSM.db.realm.crafts[spellID].intermediateQueued = (TSM.db.realm.crafts[spellID].intermediateQueued or 0) + quantity
 						mats[profession][itemString] = nil
 						usedMats[profession] = usedMats[profession] or {}
 						usedMats[profession][itemString] = numHave
@@ -148,7 +148,7 @@ function Queue:GetIntermediateCrafts(mats, usedItems, usedMats, tempMats)
 	for profession, data in pairs(subCrafts) do
 		for spellID, quantity in pairs(data) do
 			newSubCrafts = true
-			for itemString, matQuantity in pairs(TSM.db.factionrealm.crafts[spellID].mats) do
+			for itemString, matQuantity in pairs(TSM.db.realm.crafts[spellID].mats) do
 				mats[profession] = mats[profession] or {}
 				mats[profession][itemString] = (mats[profession][itemString] or 0) + matQuantity * quantity
 			end
@@ -162,7 +162,7 @@ function Queue:GetQueue()
 	local totalCost, totalProfit
 
 	-- first queue up all the normally queued stuff
-	for spellID, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellID, data in pairs(TSM.db.realm.crafts) do
 		if data.intermediateQueued then
 			data.queued = max(data.queued - data.intermediateQueued, 0)
 			data.intermediateQueued = nil
@@ -229,14 +229,14 @@ function Queue:GetQueue()
 end
 
 function Queue:ClearQueue()
-	for spellID, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellID, data in pairs(TSM.db.realm.crafts) do
 		data.queued = 0
 		data.intermediateQueued = nil
 	end
 end
 
 function Queue:addQueue(spellID, quantity)
-	local craft = TSM.db.factionrealm.crafts[spellID]
+	local craft = TSM.db.realm.crafts[spellID]
 	if not craft then return end
 	quantity = quantity or 1
 	craft.queued = craft.queued + quantity
@@ -244,7 +244,7 @@ function Queue:addQueue(spellID, quantity)
 end
 
 function Queue:removeQueue(spellID, quantity)
-	local craft = TSM.db.factionrealm.crafts[spellID]
+	local craft = TSM.db.realm.crafts[spellID]
 	if not craft then return end
 	quantity = quantity or 1
 	craft.queued = max(craft.queued - quantity, 0)
@@ -252,6 +252,6 @@ function Queue:removeQueue(spellID, quantity)
 end
 
 function Queue:getQueue(spellID)
-	local craft = TSM.db.factionrealm.crafts[spellID]
+	local craft = TSM.db.realm.crafts[spellID]
 	return craft.queued
 end

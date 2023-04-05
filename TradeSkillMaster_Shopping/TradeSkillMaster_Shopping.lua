@@ -71,7 +71,7 @@ TSM.operationDefaults = {
 	evenStacks = nil,
 	showAboveMaxPrice = nil,
 	ignorePlayer = {},
-	ignoreFactionrealm = {},
+	ignorerealm = {},
 	relationships = {},
 }
 

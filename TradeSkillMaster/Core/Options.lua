@@ -455,7 +455,7 @@ function private:LoadOptionsPage(parent)
 							relativeWidth = 0.49,
 							callback = function(_, _, value)
 								local name = characterList[value]
-								TSM.db.factionrealm.characters[name] = nil
+								TSM.db.realm.characters[name] = nil
 								TSM:Printf("%s removed.", name)
 								parent:ReloadTab()
 							end,
@@ -663,7 +663,7 @@ function private:LoadOptionsPage(parent)
 	}
 
 	-- extra multi-account syncing widgets
-	for account, players in pairs(TSM.db.factionrealm.syncAccounts) do
+	for account, players in pairs(TSM.db.realm.syncAccounts) do
 		local playerList = {}
 		for player in pairs(players) do
 			tinsert(playerList, player)
@@ -674,7 +674,7 @@ function private:LoadOptionsPage(parent)
 				text = DELETE,
 				relativeWidth = 0.2,
 				callback = function()
-					TSM.db.factionrealm.syncAccounts[account] = nil
+					TSM.db.realm.syncAccounts[account] = nil
 					parent:ReloadTab()
 				end,
 			},

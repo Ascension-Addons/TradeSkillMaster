@@ -169,9 +169,9 @@ function BankUI:getFrame(frameType)
 	bFrame:SetScript("OnMouseDown", bFrame.StartMoving)
 	bFrame:SetScript("OnMouseUp", function(...) bFrame.StopMovingOrSizing(...)
 	if bankType == "guild" then
-		TSM.db.factionrealm.bankUIGBankFramePosition = { bFrame:GetLeft(), bFrame:GetBottom() }
+		TSM.db.realm.bankUIGBankFramePosition = { bFrame:GetLeft(), bFrame:GetBottom() }
 	else
-		TSM.db.factionrealm.bankUIBankFramePosition = { bFrame:GetLeft(), bFrame:GetBottom() }
+		TSM.db.realm.bankUIBankFramePosition = { bFrame:GetLeft(), bFrame:GetBottom() }
 	end
 	end)
 	bFrame:SetMovable(true)
@@ -183,9 +183,9 @@ function BankUI:getFrame(frameType)
 		self:SetFrameLevel(0)
 		self:ClearAllPoints()
 		if bankType == "guild" then
-			self:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.factionrealm.bankUIGBankFramePosition))
+			self:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.realm.bankUIGBankFramePosition))
 		else
-			self:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.factionrealm.bankUIBankFramePosition))
+			self:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.realm.bankUIBankFramePosition))
 		end
 	end
 
@@ -270,9 +270,9 @@ end
 
 function BankUI:resetPoints(container)
 	if bankType == "guild" then
-		container:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.factionrealm.bankUIGBankFramePosition))
+		container:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.realm.bankUIGBankFramePosition))
 	else
-		container:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.factionrealm.bankUIBankFramePosition))
+		container:SetPoint("BOTTOMLEFT", UIParent, unpack(TSM.db.realm.bankUIBankFramePosition))
 	end
 end
 
@@ -337,8 +337,8 @@ function TSM:getBankTabs()
 end
 
 function TSM:ResetBankUIFramePosition()
-	TSM.db.factionrealm.bankUIGBankFramePosition = { 100, 300 }
-	TSM.db.factionrealm.bankUIBankFramePosition = { 100, 300 }
+	TSM.db.realm.bankUIGBankFramePosition = { 100, 300 }
+	TSM.db.realm.bankUIBankFramePosition = { 100, 300 }
 	if ui then
 		ui:Hide()
 		ui:Show()

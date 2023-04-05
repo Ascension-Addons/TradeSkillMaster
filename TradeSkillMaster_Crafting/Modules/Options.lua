@@ -342,7 +342,7 @@ function Options:LoadGeneralSettings(container)
 						{
 							type = "CheckBox",
 							label = L["Gather All Professions by Default if Only One Crafter"],
-							settingInfo = { TSM.db.factionrealm.gathering, "gatherAll" },
+							settingInfo = { TSM.db.realm.gathering, "gatherAll" },
 							relativeWidth = 1,
 							tooltip = L["If checked, if there is only one crafter for the craft queue clicking gather will gather for all professions for that crafter"],
 						},
@@ -491,7 +491,7 @@ function Options:UpdateCraftST()
 	if not craftST then return end
 	local stData = {}
 	local bagTotal, auctionTotal, otherTotal = TSM.Inventory:GetTotals()
-	for spellID, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellID, data in pairs(TSM.db.realm.crafts) do
 		local isFiltered
 		local name, link = TSMAPI:GetSafeItemInfo(data.itemID)
 	
@@ -572,7 +572,7 @@ function Options:LoadCraftsPage(container)
 	filters = {filter="", profession="", dpSelection="all", haveMats=nil, queueIncr=1}
 
 	local professionList = { [""] = L["<None>"] }
-	for _, data in pairs(TSM.db.factionrealm.crafts) do
+	for _, data in pairs(TSM.db.realm.crafts) do
 		professionList[data.profession] = data.profession
 	end
 
@@ -704,7 +704,7 @@ function Options:LoadCraftsPage(container)
 		local handlers = {
 			OnClick = function(st, data, self, button)
 				if not data then return end
-				local craft = TSM.db.factionrealm.crafts[data.spellID]
+				local craft = TSM.db.realm.crafts[data.spellID]
 				if button == "LeftButton" then
 					craft.queued = craft.queued + filters.queueIncr
 				elseif button == "RightButton" then
@@ -747,7 +747,7 @@ function Options:LoadCraftsPage(container)
 end
 
 function Options:ResetDefaultPrice()
-	for itemString, data in pairs(TSM.db.factionrealm.mats) do
+	for itemString, data in pairs(TSM.db.realm.mats) do
 		if data.customValue then
 			data.customValue = nil
 		end
@@ -757,12 +757,12 @@ end
 
 function Options:UpdateMatST()
 	local items = {}
-	for _, data in pairs(TSM.db.factionrealm.crafts) do
+	for _, data in pairs(TSM.db.realm.crafts) do
 		if filters.ddSelection == "none" or data.profession == filters.ddSelection then
 			for itemString in pairs(data.mats) do
-				if filters.dpSelection == "all" or (filters.dpSelection == "default" and not TSM.db.factionrealm.mats[itemString].customValue) or (filters.dpSelection == "custom" and TSM.db.factionrealm.mats[itemString].customValue) then
-					if TSM.db.factionrealm.mats[itemString] and TSM.db.factionrealm.mats[itemString].name then -- sanity check
-						items[itemString] = TSM.db.factionrealm.mats[itemString].name
+				if filters.dpSelection == "all" or (filters.dpSelection == "default" and not TSM.db.realm.mats[itemString].customValue) or (filters.dpSelection == "custom" and TSM.db.realm.mats[itemString].customValue) then
+					if TSM.db.realm.mats[itemString] and TSM.db.realm.mats[itemString].name then -- sanity check
+						items[itemString] = TSM.db.realm.mats[itemString].name
 					end
 				end
 			end
@@ -776,7 +776,7 @@ function Options:UpdateMatST()
 		if strfind(strlower(name), filters.filter) then
 			local professions = {}
 			local professionList = {}
-			for _, data in pairs(TSM.db.factionrealm.crafts) do
+			for _, data in pairs(TSM.db.realm.crafts) do
 				if data.mats[itemString] then
 					if not professions[data.profession] then
 						professions[data.profession] = true
@@ -787,7 +787,7 @@ function Options:UpdateMatST()
 			sort(professionList)
 			local professionsUsed = table.concat(professionList, ",")
 
-			local mat = TSM.db.factionrealm.mats[itemString]
+			local mat = TSM.db.realm.mats[itemString]
 			local cost = TSM:GetCustomPrice(mat.customValue or TSM.db.global.defaultMatCostMethod, itemString) or 0
 			local quantity = inventoryTotals[itemString] or 0
 			tinsert(stData, {
@@ -824,7 +824,7 @@ function Options:LoadMaterialsPage(container)
 	filters = {filter="", ddSelection="none", dpSelection="all"}
 
 	local ddList = { ["none"] = L["<None>"] }
-	for _, data in pairs(TSM.db.factionrealm.crafts) do
+	for _, data in pairs(TSM.db.realm.crafts) do
 		ddList[data.profession] = data.profession
 	end
 
@@ -962,7 +962,7 @@ end
 -- Material Options Window
 function Options:ShowMatOptionsWindow(parent, itemString)
 	if Options.OpenWindow then Options.OpenWindow:Hide() end
-	local mat = TSM.db.factionrealm.mats[itemString]
+	local mat = TSM.db.realm.mats[itemString]
 	if not mat then return end
 	local link = select(2, TSMAPI:GetSafeItemInfo(itemString)) or mat.name
 	local cost = TSM:GetCustomPrice(mat.customValue or TSM.db.global.defaultMatCostMethod, itemString) or 0

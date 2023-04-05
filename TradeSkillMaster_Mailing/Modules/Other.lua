@@ -57,16 +57,16 @@ function private:CreateDisenchantBox(frame)
 	targetBox:SetPoint("TOPLEFT", targetBoxLabel, "TOPRIGHT", 5, 0)
 	targetBox:SetPoint("TOPRIGHT", -5, -30)
 	targetBox:SetHeight(20)
-	targetBox:SetText(TSM.db.factionrealm.deMailTarget)
+	targetBox:SetText(TSM.db.realm.deMailTarget)
 	targetBox:SetScript("OnEnterPressed", function(self)
-			TSM.db.factionrealm.deMailTarget = self:GetText():trim()
+			TSM.db.realm.deMailTarget = self:GetText():trim()
 			self:ClearFocus()
 			frame.btn:Update()
 		end)
 	targetBox.tooltip = L["Enter name of the character disenchantable greens should be sent to."].."\n\n"..TSM.SPELLING_WARNING
 		
 	local function OnClick()
-		local target = TSM.db.factionrealm.deMailTarget
+		local target = TSM.db.realm.deMailTarget
 		if target == "" then return end
 		local items = {}
 		local hasItems
@@ -94,9 +94,9 @@ function private:CreateDisenchantBox(frame)
 	btn:SetScript("OnClick", OnClick)
 	btn.tooltip = L["Click this button to send all disenchantable greens in your bags to the specified character."]
 	btn.Update = function(self)
-		if TSM.db.factionrealm.deMailTarget ~= "" then
+		if TSM.db.realm.deMailTarget ~= "" then
 			self:Enable()
-			self:SetText(format(L["Send Disenchantable Greens to %s"], TSM.db.factionrealm.deMailTarget))
+			self:SetText(format(L["Send Disenchantable Greens to %s"], TSM.db.realm.deMailTarget))
 		else
 			self:Disable()
 			self:SetText(L["No Target Player"])

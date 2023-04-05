@@ -25,7 +25,7 @@ local savedDBDefaults = {
 		itemStrings = {},
 		infoID = 0,
 	},
-	factionrealm = {
+	realm = {
 		csvSales = "",
 		csvBuys = "",
 		csvIncome = "",
@@ -64,25 +64,25 @@ function TSM:OnInitialize()
 	TSM:RegisterModule()
 
 	-- clear out 1.x data
-	if TSM.db.factionrealm.itemData then
-		TSM.db.factionrealm.itemData = nil
+	if TSM.db.realm.itemData then
+		TSM.db.realm.itemData = nil
 	end
 
-	if TSM.db.factionrealm.data then
-		TSM.db.factionrealm.csvSales = TSM.db.factionrealm.data.sales
-		TSM.db.factionrealm.csvBuys = TSM.db.factionrealm.data.buys
-		TSM.db.factionrealm.data = nil
+	if TSM.db.realm.data then
+		TSM.db.realm.csvSales = TSM.db.realm.data.sales
+		TSM.db.realm.csvBuys = TSM.db.realm.data.buys
+		TSM.db.realm.data = nil
 	end
 	
-	for key, timestamp in pairs(TSM.db.factionrealm.trimmed) do
+	for key, timestamp in pairs(TSM.db.realm.trimmed) do
 		TSM:Printf(L["|cffff0000IMPORTANT:|r When TSM_Accounting last saved data for this realm, it was too big for WoW to handle, so old data was automatically trimmed in order to avoid corruption of the saved variables. The last %s of %s data has been preserved."], SecondsToTime(time()-timestamp), key)
 	end
-	TSM.db.factionrealm.trimmed = {}
+	TSM.db.realm.trimmed = {}
 
 	TSM.Data:Load()
 
 	-- fix issues in gold log
-	for player, playerData in pairs(TSM.db.factionrealm.goldLog) do
+	for player, playerData in pairs(TSM.db.realm.goldLog) do
 		for i=#playerData, 1, -1 do
 			local data = playerData[i]
 			data.startMinute = floor(data.startMinute)
@@ -135,7 +135,7 @@ end
 
 local tooltipCache = {buys={}, sales={}}
 function TSM:GetTooltip(itemString)
-	if not (TSM.db.factionrealm.tooltip.sale or TSM.db.factionrealm.tooltip.purchase) then return end
+	if not (TSM.db.realm.tooltip.sale or TSM.db.realm.tooltip.purchase) then return end
 	if not TSM.items[itemString] then return end
 	TSM.cache[itemString] = TSM.cache[itemString] or {}
 	local text = {}
@@ -145,7 +145,7 @@ function TSM:GetTooltip(itemString)
 	local numSaleRecords = #TSM.items[itemString].sales
 	local lastSold = numSaleRecords > 0 and TSM.items[itemString].sales[numSaleRecords].time or 0
 	local moneyCoinsTooltip = TSMAPI:GetMoneyCoinsTooltip()
-	if TSM.db.factionrealm.tooltip.sale and numSaleRecords > 0 then
+	if TSM.db.realm.tooltip.sale and numSaleRecords > 0 then
 		local totalSalePrice = avgSalePrice * totalSaleNum
 
 		if IsShiftKeyDown() then
@@ -183,7 +183,7 @@ function TSM:GetTooltip(itemString)
 		tinsert(text, { left = "  " .. L["Sale Rate:"], right = "|cffffffff" .. saleRate })
 	end
 
-	if TSM.db.factionrealm.tooltip.purchase and TSM.items[itemString] and #TSM.items[itemString].buys > 0 then
+	if TSM.db.realm.tooltip.purchase and TSM.items[itemString] and #TSM.items[itemString].buys > 0 then
 		local lastPurchased = TSM.items[itemString].buys[#TSM.items[itemString].buys].time
 		local totalPrice, totalNum = 0, 0
 		for _, record in ipairs(TSM.items[itemString].buys) do
@@ -288,16 +288,16 @@ function TSM:OnTSMDBShutdown()
 			while (#data > floor(MAX_CSV_RECORDS*0.9)) do
 				tremove(data)
 			end
-			TSM.db.factionrealm.trimmed[key] = data[#data].time
+			TSM.db.realm.trimmed[key] = data[#data].time
 		end
 	end
 	
-	TSM.db.factionrealm.saveTimeSales = table.concat(saveTimeSales, ",")
-	TSM.db.factionrealm.saveTimeBuys = table.concat(saveTimeBuys, ",")
-	TSM.db.factionrealm.csvSales = LibParse:CSVEncode(TSM.SELL_KEYS, sales)
-	TSM.db.factionrealm.csvBuys = LibParse:CSVEncode(TSM.BUY_KEYS, buys)
-	TSM.db.factionrealm.csvCancelled = LibParse:CSVEncode(TSM.CANCELLED_KEYS, cancels)
-	TSM.db.factionrealm.csvExpired = LibParse:CSVEncode(TSM.EXPIRED_KEYS, expires)
+	TSM.db.realm.saveTimeSales = table.concat(saveTimeSales, ",")
+	TSM.db.realm.saveTimeBuys = table.concat(saveTimeBuys, ",")
+	TSM.db.realm.csvSales = LibParse:CSVEncode(TSM.SELL_KEYS, sales)
+	TSM.db.realm.csvBuys = LibParse:CSVEncode(TSM.BUY_KEYS, buys)
+	TSM.db.realm.csvCancelled = LibParse:CSVEncode(TSM.CANCELLED_KEYS, cancels)
+	TSM.db.realm.csvExpired = LibParse:CSVEncode(TSM.EXPIRED_KEYS, expires)
 	
 	-- process income
 	local income = {}
@@ -309,7 +309,7 @@ function TSM:OnTSMDBShutdown()
 			tinsert(income, record)
 		end
 	end
-	TSM.db.factionrealm.csvIncome = LibParse:CSVEncode(TSM.INCOME_KEYS, income)
+	TSM.db.realm.csvIncome = LibParse:CSVEncode(TSM.INCOME_KEYS, income)
 	
 	-- process expense
 	local expense = {}
@@ -327,13 +327,13 @@ function TSM:OnTSMDBShutdown()
 			tinsert(expense, record)
 		end
 	end
-	TSM.db.factionrealm.csvExpense = LibParse:CSVEncode(TSM.EXPENSE_KEYS, expense)
+	TSM.db.realm.csvExpense = LibParse:CSVEncode(TSM.EXPENSE_KEYS, expense)
 	
 	-- process gold log
 	TSM.Data:LogGold()
-	for player, data in pairs(TSM.db.factionrealm.goldLog) do
+	for player, data in pairs(TSM.db.realm.goldLog) do
 		if type(data) == "table" then
-			TSM.db.factionrealm.goldLog[player] = LibParse:CSVEncode(TSM.GOLD_LOG_KEYS, data)
+			TSM.db.realm.goldLog[player] = LibParse:CSVEncode(TSM.GOLD_LOG_KEYS, data)
 		end
 	end
 end
@@ -362,9 +362,9 @@ end
 local function GetAuctionStats(itemString, minTime)
 	local cancel, expire, total = 0, 0, 0
 	for _, record in ipairs(TSM.items[itemString].auctions) do
-		if record.key == "Cancel" and TSM.db.factionrealm.cancelledAuctions and record.time > minTime then
+		if record.key == "Cancel" and TSM.db.realm.cancelledAuctions and record.time > minTime then
 			cancel = cancel + record.quantity
-		elseif record.key == "Expire" and TSM.db.factionrealm.expiredAuctions and record.time > minTime then
+		elseif record.key == "Expire" and TSM.db.realm.expiredAuctions and record.time > minTime then
 			expire = expire + record.quantity
 		end
 		total = total + record.quantity
@@ -441,7 +441,7 @@ local function GetAvgerageBuyPrice(itemString, noBaseItem)
 	if not (TSM.items[itemString] and #TSM.items[itemString].buys > 0) then return end
 
 	local itemCount = 0
-	if TSM.db.factionrealm.smartBuyPrice then
+	if TSM.db.realm.smartBuyPrice then
 		local player, alts = TSMAPI:ModuleAPI("ItemTracker", "playertotal", itemString)
 		if not player then
 			alts = nil

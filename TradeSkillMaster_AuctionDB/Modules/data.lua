@@ -316,7 +316,7 @@ function Data:ProcessData(scanData, groupItems, verifyNewAlgorithm)
 				-- item contains a "greater than 0" buyout value. That was mostly
 				-- necessary in the past, when TSM sloppily included bid-only items
 				-- in the data, but should no longer be able to happen with our new code!
-				TSM.data[itemID].lastScan = TSM.db.factionrealm.lastCompleteScan
+				TSM.data[itemID].lastScan = TSM.db.realm.lastCompleteScan
 				TSM.data[itemID].minBuyout = data.minBuyout > 0 and data.minBuyout or nil
 				TSM.data[itemID].quantity = data.quantity  -- Counts all items of all stacks.
 				Data:UpdateMarketValue(TSM.data[itemID])

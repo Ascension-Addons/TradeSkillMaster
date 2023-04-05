@@ -17,7 +17,7 @@ TSM.MAX_AVG_DAY = 1
 local SECONDS_PER_DAY = 60 * 60 * 24
 
 local savedDBDefaults = {
-	factionrealm = {
+	realm = {
 		appData = {},
 		scanData = "",
 		time = 0,
@@ -50,10 +50,10 @@ function TSM:OnInitialize()
 
 	-- register this module with TSM
 	TSM:RegisterModule()
-	TSM.db.factionrealm.time = 10 -- because AceDB won't save if we don't do this...
+	TSM.db.realm.time = 10 -- because AceDB won't save if we don't do this...
 	
 	TSM.data = {}
-	TSM:Deserialize(TSM.db.factionrealm.scanData, TSM.data)
+	TSM:Deserialize(TSM.db.realm.scanData, TSM.data)
 end
 
 -- registers this module with TSM by first setting all fields and then calling TSMAPI:NewModule().
@@ -75,7 +75,7 @@ function TSM:RegisterModule()
 		{ key = "lastCompleteScan", callback = TSM.GetLastCompleteScan },
 		{ key = "lastCompleteScanTime", callback = TSM.GetLastCompleteScanTime },
 		{ key = "adbScans", callback = TSM.GetScans },
-		{ key = "adbOppositeFaction", callback = TSM.GetOppositeFactionData },
+		--{ key = "adbOppositeFaction", callback = TSM.GetOppositeFactionData },
 	}
 	TSM.tooltipOptions = {callback = "Config:LoadTooltipOptions"}
 	TSMAPI:NewModule(TSM)
@@ -84,7 +84,7 @@ end
 function TSM:LoadAuctionData()
 	local function LoadDataThread(self, itemIDs)
 		-- process new items first
-		for itemID in pairs(TSM.db.factionrealm.appData) do
+		for itemID in pairs(TSM.db.realm.appData) do
 			if not TSM.data[itemID] then
 				TSM:DecodeItemData(itemID)
 				TSM:ProcessAppData(itemID)
@@ -131,12 +131,12 @@ function TSM:LoadAuctionData()
 end
 
 function TSM:ProcessAppData(itemID)
-	if not TSM.db.factionrealm.appData[itemID] then return end
+	if not TSM.db.realm.appData[itemID] then return end
 	
 	TSM.data[itemID] = TSM.data[itemID] or {scans = {}, lastScan = 0}
 	local dbData = TSM.data[itemID]
 	local day = TSM.Data:GetDay()
-	for _, appData in ipairs(TSM.db.factionrealm.appData[itemID]) do
+	for _, appData in ipairs(TSM.db.realm.appData[itemID]) do
 		local marketValue, minBuyout, scanTime = appData.m, appData.b, appData.t
 		if abs(day - TSM.Data:GetDay(scanTime)) <= TSM.MAX_AVG_DAY then
 			local dayScans = dbData.scans
@@ -159,11 +159,12 @@ function TSM:ProcessAppData(itemID)
 		end
 	end
 	TSM.Data:UpdateMarketValue(dbData)
-	TSM.db.factionrealm.appData[itemID] = nil
+	TSM.db.realm.appData[itemID] = nil
 end
 
 function TSM:OnEnable()
 	local function DecodeJSON(data)
+		print(data)
 		data = gsub(data, ":", "=")
 		data = gsub(data, "\"horde\"", "horde")
 		data = gsub(data, "\"alliance\"", "alliance")
@@ -193,7 +194,7 @@ function TSM:OnEnable()
 			r = strlower(r)
 			f = strlower(f)
 			local scanTime = tonumber(t)
-			if realm == r and (faction == f or f == "both") and scanTime > TSM.db.factionrealm.appDataUpdate and abs(TSM.Data:GetDay() - TSM.Data:GetDay(scanTime)) <= TSM.MAX_AVG_DAY then
+			if realm == r and (faction == f or f == "both") and scanTime > TSM.db.realm.appDataUpdate and abs(TSM.Data:GetDay() - TSM.Data:GetDay(scanTime)) <= TSM.MAX_AVG_DAY then
 				local importData = DecodeJSON(appScanData)[faction]
 				if importData then
 					for itemID, data in pairs(importData) do
@@ -202,8 +203,8 @@ function TSM:OnEnable()
 						data.b = tonumber(data.b)
 						data.t = scanTime
 						if itemID and data.m and data.b then
-							TSM.db.factionrealm.appData[itemID] = TSM.db.factionrealm.appData[itemID] or {}
-							tinsert(TSM.db.factionrealm.appData[itemID], data)
+							TSM.db.realm.appData[itemID] = TSM.db.realm.appData[itemID] or {}
+							tinsert(TSM.db.realm.appData[itemID], data)
 						end
 					end
 					maxScanTime = max(maxScanTime, scanTime)
@@ -213,8 +214,8 @@ function TSM:OnEnable()
 		end
 
 		if numNewScans > 0 then
-			TSM.db.factionrealm.appDataUpdate = maxScanTime
-			TSM.db.factionrealm.lastCompleteScan = TSM.db.factionrealm.appDataUpdate
+			TSM.db.realm.appDataUpdate = maxScanTime
+			TSM.db.realm.lastCompleteScan = TSM.db.realm.appDataUpdate
 			TSM:Printf(L["Imported %s scans worth of new auction data!"], numNewScans)
 		end
 
@@ -225,7 +226,7 @@ function TSM:OnEnable()
 end
 
 function TSM:OnTSMDBShutdown()
-	TSM.db.factionrealm.time = 0
+	TSM.db.realm.time = 0
 	TSM:Serialize(TSM.data)
 end
 
@@ -310,8 +311,8 @@ function TSM:Reset()
 		whileDead = true,
 		hideOnEscape = true,
 		OnAccept = function()
-			TSM.db.factionrealm.lastCompleteScan = 0
-			TSM.db.factionrealm.appDataUpdate = 0
+			TSM.db.realm.lastCompleteScan = 0
+			TSM.db.realm.appDataUpdate = 0
 			for i in pairs(TSM.data) do
 				TSM.data[i] = nil
 			end
@@ -456,7 +457,7 @@ function TSM:Serialize()
 			tinsert(results, "?" .. encode(itemID) .. "," .. data.encoded)
 		end
 	end
-	TSM.db.factionrealm.scanData = table.concat(results)
+	TSM.db.realm.scanData = table.concat(results)
 end
 
 function TSM:Deserialize(data, resultTbl, fullyDecode)
@@ -496,7 +497,7 @@ function TSM:GetLastCompleteScan()
 	local lastScan = {}
 	for itemID, data in pairs(TSM.data) do
 		TSM:DecodeItemData(itemID)
-		if data.lastScan == TSM.db.factionrealm.lastCompleteScan then
+		if data.lastScan == TSM.db.realm.lastCompleteScan then
 			lastScan[itemID] = { marketValue = data.marketValue, minBuyout = data.minBuyout }
 		end
 	end
@@ -505,7 +506,7 @@ function TSM:GetLastCompleteScan()
 end
 
 function TSM:GetLastCompleteScanTime()
-	return TSM.db.factionrealm.lastCompleteScan
+	return TSM.db.realm.lastCompleteScan
 end
 
 function TSM:GetScans(link)
@@ -521,7 +522,7 @@ end
 
 function TSM:GetOppositeFactionData()
 	local realm = GetRealmName()
-	local faction = UnitFactionGroup("player")
+	local faction = "Ascension" -- UnitFactionGroup("player")
 	if faction == "Horde" then
 		faction = "Alliance"
 	elseif faction == "Alliance" then
@@ -530,7 +531,7 @@ function TSM:GetOppositeFactionData()
 		return
 	end
 
-	local data = TSM.db.sv.factionrealm[faction .. " - " .. realm]
+	local data = TSM.db.sv.realm[faction .. " - " .. realm]
 	if not data or type(data.scanData) ~= "string" then return end
 
 	local result = {}

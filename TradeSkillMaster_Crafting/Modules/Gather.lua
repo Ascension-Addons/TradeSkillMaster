@@ -23,14 +23,14 @@ function Gather:BuyFromMerchant(neededMats)
 			while toBuy > 0 do
 				BuyMerchantItem(i, math.min(toBuy, maxStack))
 				toBuy = toBuy - maxStack
-				TSM.db.factionrealm.gathering.gatheredMats = true
+				TSM.db.realm.gathering.gatheredMats = true
 			end
 		end
 	end
 end
 
 function Gather:gatherItems(source, task)
-	local items = TSM.db.factionrealm.gathering.availableMats
+	local items = TSM.db.realm.gathering.availableMats
 
 	if source == L["Vendor"] then
 		Gather:BuyFromMerchant(items)
@@ -58,7 +58,7 @@ function Gather:GatherBank(moveItems)
 	else
 		TSM:Print(L["Gathering Crafting Mats"])
 		TSMAPI:MoveItems(moveItems, Gather.PrintMsg)
-		TSM.db.factionrealm.gathering.gatheredMats = true
+		TSM.db.realm.gathering.gatheredMats = true
 	end
 end
 
@@ -83,11 +83,11 @@ function Gather:MailItems(neededItems)
 	if next(neededItems) == nil then
 		TSM:Print(L["Nothing to Mail"])
 	else
-		local crafter = TSM.db.factionrealm.gathering.crafter
+		local crafter = TSM.db.realm.gathering.crafter
 		if crafter then
 			TSM:Print(format(L["Mailing Craft Mats to %s"], crafter))
 			TSMAPI:ModuleAPI("Mailing", "mailItems", neededItems, crafter, Gather.PrintMsg)
-			TSM.db.factionrealm.gathering.gatheredMats = true
+			TSM.db.realm.gathering.gatheredMats = true
 		end
 	end
 end
@@ -111,7 +111,7 @@ local function ShoppingCallback(remainingQty, boughtItem, stackSize)
 		if TSM.Inventory.gatherItem and boughtItem ~= TSM.Inventory.gatherItem then
 			for itemString, data in pairs(TSMAPI.Conversions[TSM.Inventory.gatherItem] or {}) do
 				if itemString == boughtItem then
-					TSM.db.factionrealm.gathering.destroyingMats[boughtItem] = (TSM.db.factionrealm.gathering.destroyingMats[boughtItem] or 0) + stackSize
+					TSM.db.realm.gathering.destroyingMats[boughtItem] = (TSM.db.realm.gathering.destroyingMats[boughtItem] or 0) + stackSize
 				end
 			end
 		end
@@ -125,10 +125,10 @@ end
 function Gather:ShoppingSearch(itemString, need, ignoreMaxQty)
 	TSM.Inventory.gatherQuantity = nil
 	local matPrice = TSMAPI:FormatTextMoney(TSM.Cost:GetMatCost(itemString))
-	if not TSM.db.factionrealm.gathering.destroyDisable then
+	if not TSM.db.realm.gathering.destroyDisable then
 		if TSMAPI.InkConversions[itemString] then
 			TSM.Inventory.gatherItem = itemString
-			if TSM.db.factionrealm.gathering.evenStacks then
+			if TSM.db.realm.gathering.evenStacks then
 				if ignoreMaxQty then
 					TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/even", ShoppingCallback)
 				else
@@ -154,7 +154,7 @@ function Gather:ShoppingSearch(itemString, need, ignoreMaxQty)
 				break
 			end
 			if convertSource == "mill" or convertSource == "prospect" then
-				if TSM.db.factionrealm.gathering.evenStacks then
+				if TSM.db.realm.gathering.evenStacks then
 					if ignoreMaxQty then
 						TSMAPI:ModuleAPI("Shopping", "runDestroySearch", TSMAPI:GetSafeItemInfo(itemString) .. "/even", ShoppingCallback)
 					else

@@ -27,7 +27,7 @@ function Sync:BroadcastTradeSkillData(timerUp)
 		return
 	end
 	local player = UnitName("player")
-	local playerTradeSkills = TSM.db.factionrealm.tradeSkills[player]
+	local playerTradeSkills = TSM.db.realm.tradeSkills[player]
 	if not playerTradeSkills then return end
 	
 	local packet = {tradeSkills={}, accountKey=TSMAPI.Sync:GetAccountKey()}
@@ -42,7 +42,7 @@ end
 function Sync:ProcessTradeSkills(data)
 	for key, link in pairs(data.tradeSkills) do
 		local player, tradeSkill = ("~"):split(key)
-		if not (TSM.db.factionrealm.tradeSkills[player] and TSM.db.factionrealm.tradeSkills[player][tradeSkill] and TSM.db.factionrealm.tradeSkills[player][tradeSkill].link == link) then
+		if not (TSM.db.realm.tradeSkills[player] and TSM.db.realm.tradeSkills[player][tradeSkill] and TSM.db.realm.tradeSkills[player][tradeSkill].link == link) then
 			tinsert(syncQueue, {link=link, accountKey=data.accountKey, player=player})
 		end
 	end

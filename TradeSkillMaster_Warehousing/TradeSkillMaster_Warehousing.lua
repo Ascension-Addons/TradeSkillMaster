@@ -26,7 +26,7 @@ local savedDBDefaults = {
 	},
 
 	-- data that is stored per realm/faction combination
-	factionrealm = {
+	realm = {
 		BagState = {},
 	},
 
@@ -51,9 +51,9 @@ function TSM:OnEnable()
 	-- register the module with TSM
 	TSM:RegisterModule()
 
-	if TSM.db.factionrealm.WarehousingGroups then -- remove old 1.x data on first load of 2.0
-		for key in pairs(TSM.db.factionrealm) do
-			TSM.db.factionrealm[key] = nil
+	if TSM.db.realm.WarehousingGroups then -- remove old 1.x data on first load of 2.0
+		for key in pairs(TSM.db.realm) do
+			TSM.db.realm[key] = nil
 		end
 	end
 
@@ -107,7 +107,7 @@ TSM.operationDefaults = {
 	stackSize = 5,
 	stackSizeEnabled = nil,
 	ignorePlayer = {},
-	ignoreFactionrealm = {},
+	ignorerealm = {},
 	relationships = {},
 }
 
@@ -178,8 +178,8 @@ function TSM:IsOperationIgnored(operationName)
 	TSMAPI:UpdateOperation("Warehousing", operationName)
 	local operation = TSM.operations[operationName]
 	if not operation then return end
-	local playerKey = UnitName("player").." - "..TSM.db.keys.factionrealm
-	return operation.ignorePlayer[playerKey] or operation.ignoreFactionrealm[TSM.db.keys.factionrealm]
+	local playerKey = UnitName("player").." - "..TSM.db.keys.realm
+	return operation.ignorePlayer[playerKey] or operation.ignorerealm[TSM.db.keys.realm]
 end
 
 function TSM:toggleBankUI()

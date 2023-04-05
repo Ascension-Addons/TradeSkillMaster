@@ -31,7 +31,7 @@ local savedDBDefaults = {
 		showReloadBtn = true,
 		keepMailSpace = 0,
 	},
-	factionrealm = {
+	realm = {
 		deMailTarget = "",
 		mailTargets = {},
 		mailItems = {},
@@ -75,7 +75,7 @@ TSM.operationDefaults = {
 	restockGBank = nil,
 	keepQty = 0,
 	ignorePlayer = {},
-	ignoreFactionrealm = {},
+	ignorerealm = {},
 	relationships = {},
 }
 

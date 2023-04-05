@@ -30,7 +30,7 @@ local savedDBDefaults = {
 		priceColumn = 1,
 		tooltip = true,
 	},
-	factionrealm = {
+	realm = {
 		player = {},
 		whitelist = {},
 		lastSoldFilter = 0,
@@ -47,7 +47,7 @@ function TSM:OnInitialize()
 	end
 
 	-- Add this character to the alt list so it's not undercut by the player
-	TSM.db.factionrealm.player[UnitName("player")] = true
+	TSM.db.realm.player[UnitName("player")] = true
 	
 	-- register this module with TSM
 	TSM:RegisterModule()
@@ -117,7 +117,7 @@ TSM.operationDefaults = {
 	matchStackSize = nil,
 	ignoreLowDuration = 0,
 	ignorePlayer = {},
-	ignoreFactionrealm = {},
+	ignorerealm = {},
 	relationships = {},
 	-- post
 	stackSize = 1,

@@ -19,7 +19,7 @@ local savedDBDefaults = {
 	},
 
 	-- data that is stored per realm/faction combination
-	factionrealm = {
+	realm = {
 		characters = {},
 		guilds = {},
 		ignoreGuilds = {},
@@ -58,13 +58,13 @@ function TSM:OnInitialize()
 
 	-- load the saved variables table into TSM.db
 	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMaster_ItemTrackerDB", savedDBDefaults, true)
-	TSM.characters = TSM.db.factionrealm.characters
-	TSM.guilds = TSM.db.factionrealm.guilds
+	TSM.characters = TSM.db.realm.characters
+	TSM.guilds = TSM.db.realm.guilds
 	
 	-- handle connected realms for characters
 	local connectedRealms = TSMAPI.GetConnectedRealms and TSMAPI:GetConnectedRealms() or {}
 	for _, realm in ipairs(connectedRealms) do
-		local connectedRealmData = TSM.db.sv.factionrealm[TSM.db.keys.faction.." - "..realm]
+		local connectedRealmData = TSM.db.sv.realm[TSM.db.keys.faction.." - "..realm]
 		if connectedRealmData and connectedRealmData.characters then
 			for player, data in pairs(connectedRealmData.characters) do
 				TSM.characters[player.."-"..realm] = data
@@ -193,7 +193,7 @@ function TSM:GetTooltip(itemString)
 		end
 
 		for name, data in pairs(TSM.guilds) do
-			if not TSM.db.factionrealm.ignoreGuilds[name] then
+			if not TSM.db.realm.ignoreGuilds[name] then
 				local gbank = data.items[itemString] or 0
 				grandTotal = grandTotal + gbank
 
@@ -214,25 +214,25 @@ function TSM:GetTooltip(itemString)
 end
 
 function TSM:OnTSMDBShutdown()
-	TSM.db.factionrealm.characters = {}
+	TSM.db.realm.characters = {}
 	local faction = TSM.db.keys.faction
 	for name, playerData in pairs(TSM.characters) do
 		local player, realm = ("-"):split(name)
 		if realm and realm ~= "" then
-			local factionrealm = faction.." - "..realm
-			for key, data in pairs(TSM.db.sv.factionrealm) do
-				if key == factionrealm then
+			local realm = faction.." - "..realm
+			for key, data in pairs(TSM.db.sv.realm) do
+				if key == realm then
 					data[player] = playerData
 					break
 				end
 			end
 		else
-			TSM.db.factionrealm.characters[player] = playerData
+			TSM.db.realm.characters[player] = playerData
 		end
 	end
 	
 	-- not yet handling guilds for connected realms
-	TSM.db.factionrealm.guilds = TSM.guilds
+	TSM.db.realm.guilds = TSM.guilds
 end
 
 function TSM:UpdatePlayerLookup()
@@ -281,7 +281,7 @@ end
 
 function TSM:GetGuildBank(guild)
 	guild = guild or TSM.CURRENT_GUILD
-	if not guild or not TSM.guilds[guild] or TSM.db.factionrealm.ignoreGuilds[guild] then return end
+	if not guild or not TSM.guilds[guild] or TSM.db.realm.ignoreGuilds[guild] then return end
 	return TSM.guilds[guild].items
 end
 
@@ -313,7 +313,7 @@ end
 function TSM:GetGuildTotal(itemString)
 	local guildTotal = 0
 	for guild, data in pairs(TSM.guilds) do
-		if not TSM.db.factionrealm.ignoreGuilds[guild] then
+		if not TSM.db.realm.ignoreGuilds[guild] then
 			guildTotal = guildTotal + (data.items[itemString] or 0)
 		end
 	end
@@ -333,7 +333,7 @@ function TSM:GetPlayerGuildTotal(itemString, player)
 	player = TSM.playerLookup[player] or player
 	if not player or not TSM.characters[player] then return end
 	local guild = TSM.characters[player].guild
-	if not guild or not TSM.guilds[guild] or TSM.db.factionrealm.ignoreGuilds[guild] then return end
+	if not guild or not TSM.guilds[guild] or TSM.db.realm.ignoreGuilds[guild] then return end
 
 	return TSM.guilds[guild].items[itemString]
 end

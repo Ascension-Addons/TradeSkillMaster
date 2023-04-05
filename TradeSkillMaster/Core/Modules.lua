@@ -220,7 +220,7 @@ function TSMAPI:NewModule(obj)
 		obj.operations = TSM.operations[moduleName]
 		for _, operation in pairs(obj.operations) do
 			operation.ignorePlayer = operation.ignorePlayer or {}
-			operation.ignoreFactionrealm = operation.ignoreFactionrealm or {}
+			operation.ignorerealm = operation.ignorerealm or {}
 			operation.relationships = operation.relationships or {}
 		end
 		TSM:CheckOperationRelationships(moduleName)
@@ -266,7 +266,7 @@ function TSM:UpdateModuleProfiles()
 	for module, operations in pairs(TSM.operations) do
 		for _, operation in pairs(operations) do
 			operation.ignorePlayer = operation.ignorePlayer or {}
-			operation.ignoreFactionrealm = operation.ignoreFactionrealm or {}
+			operation.ignorerealm = operation.ignorerealm or {}
 			operation.relationships = operation.relationships or {}
 		end
 		TSM:CheckOperationRelationships(module)
@@ -296,9 +296,9 @@ function TSM:IsOperationIgnored(module, operationName)
 	local obj = moduleObjects[module]
 	local operation = obj.operations[operationName]
 	if not operation then return end
-	local factionrealm = TSM.db.keys.factionrealm
-	local playerKey = UnitName("player").." - "..factionrealm
-	return operation.ignorePlayer[playerKey] or operation.ignoreFactionrealm[factionrealm]
+	local realm = TSM.db.keys.realm
+	local playerKey = UnitName("player").." - "..realm
+	return operation.ignorePlayer[playerKey] or operation.ignorerealm[realm]
 end
 
 function TSM:CheckOperationRelationships(moduleName)

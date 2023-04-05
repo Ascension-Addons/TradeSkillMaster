@@ -46,7 +46,7 @@ function TSMAPI:ShowStaticPopupDialog(name)
 end
 
 function TSMAPI:GetCharacters()
-	return CopyTable(TSM.db.factionrealm.characters)
+	return CopyTable(TSM.db.realm.characters)
 end
 
 

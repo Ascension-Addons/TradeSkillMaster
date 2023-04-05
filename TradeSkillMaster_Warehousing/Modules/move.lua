@@ -46,7 +46,7 @@ function move:EmptyRestore(dest, restore)
 	end
 
 	if restore then
-		moveItems = TSM.db.factionrealm.BagState
+		moveItems = TSM.db.realm.BagState
 	else
 		local srcTable = move:getContainerTable("bags")
 		moveItems = TSM.data:getEmptyRestoreGroup(srcTable, isGuildBank)
@@ -58,7 +58,7 @@ function move:EmptyRestore(dest, restore)
 		TSM:Print(L["Preparing to Move"])
 		TSMAPI:MoveItems(moveItems, TSM.PrintMsg, true)
 		if restore then
-			TSM.db.factionrealm.BagState = {}
+			TSM.db.realm.BagState = {}
 		end
 	end
 end
