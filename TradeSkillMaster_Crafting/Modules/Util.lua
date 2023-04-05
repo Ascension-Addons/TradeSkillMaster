@@ -102,7 +102,7 @@ function Util:ScanCurrentProfession()
 			if itemID and spellID then
 				local lNum, hNum = GetTradeSkillNumMade(index)
 				local numMade = floor(((lNum or 1) + (hNum or 1))/2)
-				local hasCD = GetTradeSkillCooldown(index) and true or nil
+				local hasCD = TSM.SpellHasBaseCooldown[spellID]
 				local mats = {}
 				if currentTradeSkill == TSM.enchantingName and strfind(itemLink, "enchant:") then
 					local VellumString = "item:"..TSM.VellumInfo[spellID]..":0:0:0:0:0:0"
@@ -227,7 +227,7 @@ function Util.ScanSyncedProfessionThread(self)
 			if itemID and spellID then
 				local lNum, hNum = GetTradeSkillNumMade(index)
 				local numMade = floor(((lNum or 1) + (hNum or 1))/2)
-				local hasCD = GetTradeSkillCooldown(index) and true or nil
+				local hasCD = TSM.SpellHasBaseCooldown[spellID]
 				local mats = {}
 				if currentTradeSkill == TSM.enchantingName and strfind(itemLink, "enchant:") then
 					local VellumString = "item:"..TSM.VellumInfo[spellID]..":0:0:0:0:0:0"
