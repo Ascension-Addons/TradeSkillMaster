@@ -15,7 +15,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_Crafting") -- loa
 local currentVisited = {}
 local cache = { time = 0 }
 function Cost:GetMatCost(itemString)
-	local mat = TSM.db.factionrealm.mats[itemString]
+	local mat = TSM.db.realm.mats[itemString]
 	if not mat then return end
 
 	if cache.time < (time() - 1) then
@@ -37,8 +37,8 @@ end
 function Cost:GetCraftValue(itemString)
 	if type(itemString) == "number" then
 		-- we got passed a spell
-		if not TSM.db.factionrealm.crafts[itemString] then return end
-		itemString = TSM.db.factionrealm.crafts[itemString].itemID
+		if not TSM.db.realm.crafts[itemString] then return end
+		itemString = TSM.db.realm.crafts[itemString].itemID
 	end
 	if type(itemString) ~= "string" then return end
 	local operation = TSMAPI:GetItemOperation(itemString, "Crafting")
@@ -56,7 +56,7 @@ function Cost:GetCraftCost(itemID)
 		spellIDs = TSM.craftReverseLookup[TSMAPI:GetBaseItemstring(itemID)]
 	elseif type(itemID) == "number" then
 		-- we got passed a spell
-		if TSM.db.factionrealm.crafts[itemID] then
+		if TSM.db.realm.crafts[itemID] then
 			spellIDs = { itemID }
 		end
 	end
@@ -64,20 +64,20 @@ function Cost:GetCraftCost(itemID)
 
 	local lowestCost
 	for _, spellID in ipairs(spellIDs) do
-		local craft = TSM.db.factionrealm.crafts[spellID]
+		local craft = TSM.db.realm.crafts[spellID]
 		local cost, costIsValid = 0, true
-		if #spellIDs >= 2 and TSM.db.global.ignoreCDCraftCost and TSM.db.factionrealm.crafts[spellID].hasCD then
+		if #spellIDs >= 2 and TSM.db.global.ignoreCDCraftCost and TSM.db.realm.crafts[spellID].hasCD then
 			costIsValid = false
 		end
 		for matID, matQuantity in pairs(craft.mats) do
 		
 			local MatName = GetItemInfo(matID)
-			if MatName ~= nil and strfind(MatName, "Vellum") then			
-				local NewItemString = CheapestVellum(matID)
-				if matID ~= NewItemString then
-					matID = NewItemString
-				end
-			end
+			-- if MatName ~= nil and strfind(MatName, "Vellum") then			
+			-- 	local NewItemString = CheapestVellum(matID)
+			-- 	if matID ~= NewItemString then
+			-- 		matID = NewItemString
+			-- 	end
+			-- end
 			local matCost = Cost:GetMatCost(matID)
 			if not matCost or matCost == 0 then
 				costIsValid = false
@@ -119,15 +119,15 @@ function Cost:GetLowestCraftPrices(itemString, intermediate)
 	local lowestCost, cheapestSpellID
 	local soh = "item:76061:0:0:0:0:0:0" -- Spirit of Harmony
 	for _, spellID in ipairs(spellIDs) do
-		if TSM.db.factionrealm.crafts[spellID] then
-			if intermediate and (TSM.db.factionrealm.crafts[spellID].mats[soh] or TSM.db.factionrealm.crafts[spellID].hasCD) then
+		if TSM.db.realm.crafts[spellID] then
+			if intermediate and (TSM.db.realm.crafts[spellID].mats[soh] or TSM.db.realm.crafts[spellID].hasCD) then
 				break
 			end --exclude spells using SOH or have cooldown from intermediate crafts
 			local cost = Cost:GetCraftCost(spellID)
 			if cost and (not lowestCost or cost < lowestCost) then
 				-- exclude spells with cooldown if option to ignore is enabled or more than one way to craft and not soulbound e.g. BoE
 				if not TSM.db.global.ignoreCDCraftCost then
-					if TSM.db.factionrealm.crafts[spellID].hasCD then
+					if TSM.db.realm.crafts[spellID].hasCD then
 						if TSMAPI.SOULBOUND_MATS[itemString] or #spellIDs == 1 then
 							lowestCost = cost
 							cheapestSpellID = spellID
@@ -136,7 +136,7 @@ function Cost:GetLowestCraftPrices(itemString, intermediate)
 						lowestCost = cost
 						cheapestSpellID = spellID
 					end
-				elseif not TSM.db.factionrealm.crafts[spellID].hasCD then
+				elseif not TSM.db.realm.crafts[spellID].hasCD then
 					lowestCost = cost
 					cheapestSpellID = spellID
 				end

@@ -96,7 +96,7 @@ local function FullScanCallback(event, ...)
 			-- It would be like trying to predict "the total download-time of a
 			-- file that keeps fluctuating between fast and slow speeds". The
 			-- best we can do is estimate based on current and previous speeds.
-			local last_scan_seconds_per_page = TSM.db.factionrealm.lastScanSecondsPerPage
+			local last_scan_seconds_per_page = TSM.db.realm.lastScanSecondsPerPage
 			if last_scan_seconds_per_page and last_scan_seconds_per_page > 0 then
 				-- TSM:Print(format("Read from DB: %f (Our unweighted estimate: %f)", last_scan_seconds_per_page, seconds_per_page))  -- DEBUG
 				seconds_per_page = (seconds_per_page * progress_float) + (last_scan_seconds_per_page * remaining_float)
@@ -143,7 +143,7 @@ local function FullScanCallback(event, ...)
 		-- with incorrect, partial-scan estimates, since most servers heavily
 		-- slow down their page requests over time. The completed scan is the truth.
 		if Scan.fullScanSecondsPerPage > 0 then
-			TSM.db.factionrealm.lastScanSecondsPerPage = Scan.fullScanSecondsPerPage
+			TSM.db.realm.lastScanSecondsPerPage = Scan.fullScanSecondsPerPage
 		end
 
 		-- Calculate how many seconds the completed "Full Scan" took.
@@ -333,7 +333,7 @@ function Scan.ProcessGetAllScan(self)
 	end
 
 	-- Process the collected "GetAll" auction data as a new "complete scan" with today's date.
-	TSM.db.factionrealm.lastCompleteScan = time()
+	TSM.db.realm.lastCompleteScan = time()
 	TSM.Data:ProcessData(data, nil, verifyNewAlgorithm)
 
 	-- Show GUI progress while we're waiting for the processing.
@@ -569,7 +569,7 @@ function Scan:ProcessScanData(scanData)
 	-- Mark the collected auction data as a new "complete scan" with today's date,
 	-- but only if this was a normal "Full Scan" (not just a "TSM item group" scan).
 	if Scan.isScanning ~= "group" then
-		TSM.db.factionrealm.lastCompleteScan = time()
+		TSM.db.realm.lastCompleteScan = time()
 	end
 
 	-- Process the collected auction data.
@@ -618,6 +618,6 @@ function Scan:ProcessImportedData(auctionData)
 	end
 
 	-- Process the imported auction data as a new "complete scan" with today's date.
-	TSM.db.factionrealm.lastCompleteScan = time()
+	TSM.db.realm.lastCompleteScan = time()
 	TSM.Data:ProcessData(data, nil, verifyNewAlgorithm)
 end

@@ -363,14 +363,14 @@ function TSMAPI:DrawOperationManagement(TSMObj, container, operationName)
 	local operation = TSMObj.operations[operationName]
 
 	local playerList = {}
-	local factionrealmKey = TSM.db.keys.factionrealm
-	for playerName in pairs(TSM.db.factionrealm.characters) do
-		playerList[playerName.." - "..factionrealmKey] = playerName
+	local realmKey = TSM.db.keys.realm
+	for playerName in pairs(TSM.db.realm.characters) do
+		playerList[playerName.." - "..realmKey] = playerName
 	end
 	
-	local factionrealmList = {}
-	for factionrealm in pairs(TSM.db.sv.factionrealm) do
-		factionrealmList[factionrealm] = factionrealm
+	local realmList = {}
+	for realm in pairs(TSM.db.sv.realm) do
+		realmList[realm] = realm
 	end
 	
 	local groupList = {}
@@ -436,9 +436,9 @@ function TSMAPI:DrawOperationManagement(TSMObj, container, operationName)
 						{
 							type = "Dropdown",
 							label = L["Ignore Operation on Faction-Realms:"],
-							list = factionrealmList,
+							list = realmList,
 							relativeWidth = 0.5,
-							settingInfo = {operation, "ignoreFactionrealm"},
+							settingInfo = {operation, "ignorerealm"},
 							multiselect = true,
 							tooltip = L["This operation will be ignored when you're on any character which is checked in this dropdown."],
 						},
@@ -612,7 +612,7 @@ function TSMAPI:DrawOperationManagement(TSMObj, container, operationName)
 								end
 								data.module = nil
 								data.ignorePlayer = {}
-								data.ignoreFactionrealm = {}
+								data.ignorerealm = {}
 								data.relationships = {}
 								TSMObj.operations[operationName] = data
 								self:SetText("")
@@ -629,7 +629,7 @@ function TSMAPI:DrawOperationManagement(TSMObj, container, operationName)
 								local data = CopyTable(operation)
 								data.module = moduleName
 								data.ignorePlayer = nil
-								data.ignoreFactionrealm = nil
+								data.ignorerealm = nil
 								data.relationships = nil
 								ShowExportFrame(LibStub("AceSerializer-3.0"):Serialize(data))
 							end,

@@ -121,7 +121,7 @@ local savedDBDefaults = {
 		colorGroupName = true,
 		embeddedTooltip = true,
 	},
-	factionrealm = {
+	realm = {
 		accountKey = nil,
 		characters = {},
 		syncAccounts = {},
@@ -161,9 +161,9 @@ function TSM:OnInitialize()
 	TSM:RegisterModule()
 
 	-- create account key for multi-account syncing if necessary
-	TSM.db.factionrealm.accountKey = TSM.db.factionrealm.accountKey or (GetRealmName() .. random(time()))
+	TSM.db.realm.accountKey = TSM.db.realm.accountKey or (GetRealmName() .. random(time()))
 	-- add this character to the list of characters on this realm
-	TSM.db.factionrealm.characters[UnitName("player")] = true
+	TSM.db.realm.characters[UnitName("player")] = true
 
 	-- Initialize default design, and apply defaults for any missing DB values.
 	-- NOTE: We allow missing fonts (such as uninstalled SharedMedia fonts), and

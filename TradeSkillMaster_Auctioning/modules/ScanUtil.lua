@@ -89,7 +89,7 @@ function Scan:ProcessItem(itemString, auctionItem)
 	if not itemString or not auctionItem then return end
 	auctionItem:SetRecordParams({"GetItemBuyout", "GetItemDisplayedBid", "seller", "count"})
 	auctionItem:PopulateCompactRecords()
-	auctionItem:SetAlts(TSM.db.factionrealm.player)
+	auctionItem:SetAlts(TSM.db.realm.player)
 	if #auctionItem.records > 0 then
 		auctionItem:SetMarketValue(TSMAPI:GetItemValue(itemString, "DBMarket"))
 		Scan.auctionData[itemString] = auctionItem
@@ -169,7 +169,7 @@ function Scan:GetLowestAuction(auctionItem, operation)
 			end
 		end
 	end
-	if owner == "?" and next(TSM.db.factionrealm.whitelist) then
+	if owner == "?" and next(TSM.db.realm.whitelist) then
 		invalidSellerEntry = true
 	end
 
@@ -182,7 +182,7 @@ function Scan:GetLowestAuction(auctionItem, operation)
 			local recordBuyout = record:GetItemBuyout()
 			if not record:IsPlayer() and recordBuyout and recordBuyout == buyout then
 				isPlayer = nil
-				if not TSM.db.factionrealm.whitelist[strlower(record.seller)] then
+				if not TSM.db.realm.whitelist[strlower(record.seller)] then
 					isWhitelist = nil
 				end
 				
@@ -192,7 +192,7 @@ function Scan:GetLowestAuction(auctionItem, operation)
 			end
 		end
 	end
-	if owner == "?" and next(TSM.db.factionrealm.whitelist) then
+	if owner == "?" and next(TSM.db.realm.whitelist) then
 		invalidSellerEntry = true
 	end
 

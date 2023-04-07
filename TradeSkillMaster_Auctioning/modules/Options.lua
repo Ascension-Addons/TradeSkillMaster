@@ -226,19 +226,19 @@ function Options:DrawWhitelistSettings(container)
 		value = string.trim(strlower(value or ""))
 		if value == "" then return TSM:Print(L["No name entered."]) end
 
-		if TSM.db.factionrealm.whitelist[value] then
-			TSM:Printf(L["The player \"%s\" is already on your whitelist."], TSM.db.factionrealm.whitelist[value])
+		if TSM.db.realm.whitelist[value] then
+			TSM:Printf(L["The player \"%s\" is already on your whitelist."], TSM.db.realm.whitelist[value])
 			return
 		end
 
-		for player in pairs(TSM.db.factionrealm.player) do
+		for player in pairs(TSM.db.realm.player) do
 			if strlower(player) == value then
 				TSM:Printf(L["You do not need to add \"%s\", alts are whitelisted automatically."], player)
 				return
 			end
 		end
 
-		TSM.db.factionrealm.whitelist[strlower(value)] = value
+		TSM.db.realm.whitelist[strlower(value)] = value
 		container:SelectByPath(2)
 	end
 
@@ -292,11 +292,11 @@ function Options:DrawWhitelistSettings(container)
 		},
 	}
 
-	for name in pairs(TSM.db.factionrealm.whitelist) do
+	for name in pairs(TSM.db.realm.whitelist) do
 		tinsert(page[1].children[3].children,
 			{
 				type = "Label",
-				text = TSM.db.factionrealm.whitelist[name],
+				text = TSM.db.realm.whitelist[name],
 				fontObject = GameFontNormal,
 			})
 		tinsert(page[1].children[3].children,
@@ -305,7 +305,7 @@ function Options:DrawWhitelistSettings(container)
 				text = L["Delete"],
 				relativeWidth = 0.3,
 				callback = function(self)
-					TSM.db.factionrealm.whitelist[name] = nil
+					TSM.db.realm.whitelist[name] = nil
 					container:SelectByPath(2)
 				end,
 			})

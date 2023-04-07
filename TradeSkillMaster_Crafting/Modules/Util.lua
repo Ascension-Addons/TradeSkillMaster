@@ -102,38 +102,14 @@ function Util:ScanCurrentProfession()
 			if itemID and spellID then
 				local lNum, hNum = GetTradeSkillNumMade(index)
 				local numMade = floor(((lNum or 1) + (hNum or 1))/2)
-				local hasCD = select(2, GetTradeSkillCooldown(index)) and true or nil
+				local hasCD = GetSpellBaseCooldown(spellID) > 0 and 1 or nil
 				local mats = {}
 				if currentTradeSkill == TSM.enchantingName and strfind(itemLink, "enchant:") then
-					-- mats[VELLUM_ID] = 1
-					-- local name = TSMAPI:GetSafeItemInfo(VELLUM_ID) or (GetLocale() == "enUS" and "Enchanting Vellum") or nil
-					-- TSM.db.factionrealm.mats[VELLUM_ID] = TSM.db.factionrealm.mats[VELLUM_ID] or {}
-					-- TSM.db.factionrealm.mats[VELLUM_ID].name = TSM.db.factionrealm.mats[VELLUM_ID].name or name
 					local VellumString = "item:"..TSM.VellumInfo[spellID]..":0:0:0:0:0:0"
-					
-					
-					
-					-- -- Get Cheapest vellum, lower vellum types can be replaced by III
-					-- local velName
-					-- if TSM.VellumInfo[spellID] then
-						-- velName = GetItemInfo(TSM.VellumInfo[spellID])
-					-- end
-					-- if (velName ~= nil) and (not strfind(velName, "III")) then						
-						-- local VellumReplacePrice = TSM.Cost:GetMatCost(VellumString)
-
-						-- if strfind(GetSpellInfo(spellID), "Weapon") or strfind(GetSpellInfo(spellID), "Staff")then						
-							-- if VellumReplacePrice > TSM.Cost:GetMatCost("item:43146:0:0:0:0:0:0") then VellumString = "item:43146:0:0:0:0:0:0" end
-						-- else
-							-- if VellumReplacePrice > TSM.Cost:GetMatCost("item:43145:0:0:0:0:0:0") then VellumString = "item:4314:0:0:0:0:0:0" end
-						-- end
-					-- end
-					
-					
-					
 					mats[VellumString] = 1
 					local name = TSMAPI:GetSafeItemInfo(VellumString) or nil
-					TSM.db.factionrealm.mats[VellumString] = TSM.db.factionrealm.mats[VellumString] or {}
-					TSM.db.factionrealm.mats[VellumString].name = TSM.db.factionrealm.mats[VellumString].name or name
+					TSM.db.realm.mats[VellumString] = TSM.db.realm.mats[VellumString] or {}
+					TSM.db.realm.mats[VellumString].name = TSM.db.realm.mats[VellumString].name or name
 					numMade = 1
 				end
 				
@@ -154,15 +130,15 @@ function Util:ScanCurrentProfession()
 					end
 					
 					mats[matID] = quantity
-					TSM.db.factionrealm.mats[matID] = TSM.db.factionrealm.mats[matID] or {}
-					TSM.db.factionrealm.mats[matID].name = TSM.db.factionrealm.mats[matID].name or name
+					TSM.db.realm.mats[matID] = TSM.db.realm.mats[matID] or {}
+					TSM.db.realm.mats[matID].name = TSM.db.realm.mats[matID].name or name
 				end
 				
 				if isValid then
-					local players = TSM.db.factionrealm.crafts[spellID] and TSM.db.factionrealm.crafts[spellID].players or {}
+					local players = TSM.db.realm.crafts[spellID] and TSM.db.realm.crafts[spellID].players or {}
 					players[playerName] = true
-					local queued = TSM.db.factionrealm.crafts[spellID] and TSM.db.factionrealm.crafts[spellID].queued or 0
-					local intermediateQueued = TSM.db.factionrealm.crafts[spellID] and TSM.db.factionrealm.crafts[spellID].intermediateQueued or nil
+					local queued = TSM.db.realm.crafts[spellID] and TSM.db.realm.crafts[spellID].queued or 0
+					local intermediateQueued = TSM.db.realm.crafts[spellID] and TSM.db.realm.crafts[spellID].intermediateQueued or nil
 					newCrafts[spellID] = {name=craftName, itemID=itemID, mats=mats, hasCD=hasCD, numResult=numMade, queued=queued, intermediateQueued=intermediateQueued, players=players, profession=currentTradeSkill}
 					if not usedItems[itemID] then
 						usedItems[itemID] = true
@@ -182,7 +158,7 @@ function Util:ScanCurrentProfession()
 	end
 	
 	-- search for and remove any spells that we can't craft anymore
-	for spellID, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellID, data in pairs(TSM.db.realm.crafts) do
 		if data.profession == currentTradeSkill then
 			local hasCrafters = false
 			for player in pairs(data.players) do
@@ -193,14 +169,14 @@ function Util:ScanCurrentProfession()
 			end
 			
 			if not hasCrafters then
-				TSM.db.factionrealm.crafts[spellID] = nil
+				TSM.db.realm.crafts[spellID] = nil
 			end
 		end
 	end
 	
 	-- save the new craft info
 	for spellID, data in pairs(newCrafts) do
-		TSM.db.factionrealm.crafts[spellID] = data
+		TSM.db.realm.crafts[spellID] = data
 	end
 	TSM.CraftingGUI:PromptPresetGroups(currentTradeSkill, presetGroupInfo) --Bugged, asks after every login. Not saving prompt result between sessions. Either saving or loading bug (works fine on /reload though).
 end
@@ -251,40 +227,15 @@ function Util.ScanSyncedProfessionThread(self)
 			if itemID and spellID then
 				local lNum, hNum = GetTradeSkillNumMade(index)
 				local numMade = floor(((lNum or 1) + (hNum or 1))/2)
-				local hasCD = select(2, GetTradeSkillCooldown(index)) and true or nil
+				local hasCD = GetSpellBaseCooldown(spellID) > 0 and 1 or nil
 				local mats = {}
 				if currentTradeSkill == TSM.enchantingName and strfind(itemLink, "enchant:") then
-					-- mats[VELLUM_ID] = 1
-					-- local name = TSMAPI:GetSafeItemInfo(VELLUM_ID) or (GetLocale() == "enUS" and "Enchanting Vellum") or nil
-					-- TSM.db.factionrealm.mats[VELLUM_ID] = TSM.db.factionrealm.mats[VELLUM_ID] or {}
-					-- TSM.db.factionrealm.mats[VELLUM_ID].name = TSM.db.factionrealm.mats[VELLUM_ID].name or name
-										
 					local VellumString = "item:"..TSM.VellumInfo[spellID]..":0:0:0:0:0:0"
-					
-					
 
-					-- -- Get Cheapest vellum, lower vellum types can be replaced by III
-					-- local velName
-					-- if TSM.VellumInfo[spellID] then
-						-- velName = GetItemInfo(TSM.VellumInfo[spellID])
-					-- end
-					-- if (velName ~= nil) and (not strfind(velName, "III")) then						
-						-- local VellumReplacePrice = TSM.Cost:GetMatCost(VellumString)
-
-						-- if strfind(GetSpellInfo(spellID), "Weapon") or strfind(GetSpellInfo(spellID), "Staff")then						
-							-- if VellumReplacePrice > TSM.Cost:GetMatCost("item:43146:0:0:0:0:0:0") then VellumString = "item:43146:0:0:0:0:0:0" end
-						-- else
-							-- if VellumReplacePrice > TSM.Cost:GetMatCost("item:43145:0:0:0:0:0:0") then VellumString = "item:4314:0:0:0:0:0:0" end
-						-- end
-					-- end
-					
-					
-					
-						
 					mats[VellumString] = 1
 					local name = TSMAPI:GetSafeItemInfo(VellumString) or nil
-					TSM.db.factionrealm.mats[VellumString] = TSM.db.factionrealm.mats[VellumString] or {}
-					TSM.db.factionrealm.mats[VellumString].name = TSM.db.factionrealm.mats[VellumString].name or name
+					TSM.db.realm.mats[VellumString] = TSM.db.realm.mats[VellumString] or {}
+					TSM.db.realm.mats[VellumString].name = TSM.db.realm.mats[VellumString].name or name
 					numMade = 1
 				end
 				
@@ -305,15 +256,15 @@ function Util.ScanSyncedProfessionThread(self)
 					end
 					
 					mats[matID] = quantity
-					TSM.db.factionrealm.mats[matID] = TSM.db.factionrealm.mats[matID] or {}
-					TSM.db.factionrealm.mats[matID].name = TSM.db.factionrealm.mats[matID].name or name
+					TSM.db.realm.mats[matID] = TSM.db.realm.mats[matID] or {}
+					TSM.db.realm.mats[matID].name = TSM.db.realm.mats[matID].name or name
 				end
 				
 				if isValid then
-					local players = TSM.db.factionrealm.crafts[spellID] and TSM.db.factionrealm.crafts[spellID].players or {}
+					local players = TSM.db.realm.crafts[spellID] and TSM.db.realm.crafts[spellID].players or {}
 					players[playerName] = true
-					local queued = TSM.db.factionrealm.crafts[spellID] and TSM.db.factionrealm.crafts[spellID].queued or 0
-					local intermediateQueued = TSM.db.factionrealm.crafts[spellID] and TSM.db.factionrealm.crafts[spellID].intermediateQueued or nil
+					local queued = TSM.db.realm.crafts[spellID] and TSM.db.realm.crafts[spellID].queued or 0
+					local intermediateQueued = TSM.db.realm.crafts[spellID] and TSM.db.realm.crafts[spellID].intermediateQueued or nil
 					newCrafts[spellID] = {name=craftName, itemID=itemID, mats=mats, hasCD=hasCD, numResult=numMade, queued=queued, intermediateQueued=intermediateQueued, players=players, profession=currentTradeSkill}
 				end
 			end
@@ -323,7 +274,7 @@ function Util.ScanSyncedProfessionThread(self)
 	end
 	
 	-- search for and remove any spells that we can't craft anymore
-	for spellID, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellID, data in pairs(TSM.db.realm.crafts) do
 		if data.profession == currentTradeSkill then
 			local hasCrafters = false
 			for player in pairs(data.players) do
@@ -334,23 +285,23 @@ function Util.ScanSyncedProfessionThread(self)
 			end
 			
 			if not hasCrafters then
-				TSM.db.factionrealm.crafts[spellID] = nil
+				TSM.db.realm.crafts[spellID] = nil
 			end
 		end
 	end
 	
 	-- save the new craft info
 	for spellID, data in pairs(newCrafts) do
-		TSM.db.factionrealm.crafts[spellID] = data
+		TSM.db.realm.crafts[spellID] = data
 	end
 	local playerName = select(2, IsTradeSkillLinked())
 	local skillName, level, maxLevel = GetTradeSkillLine()
-	TSM.db.factionrealm.tradeSkills[playerName] = TSM.db.factionrealm.tradeSkills[playerName] or {}
-	TSM.db.factionrealm.tradeSkills[playerName][skillName] = TSM.db.factionrealm.tradeSkills[playerName][skillName] or {}
-	TSM.db.factionrealm.tradeSkills[playerName][skillName].link = TSM.isSyncing.link
-	TSM.db.factionrealm.tradeSkills[playerName][skillName].accountKey = TSM.isSyncing.accountKey
-	TSM.db.factionrealm.tradeSkills[playerName][skillName].level = level
-	TSM.db.factionrealm.tradeSkills[playerName][skillName].maxLevel = maxLevel
+	TSM.db.realm.tradeSkills[playerName] = TSM.db.realm.tradeSkills[playerName] or {}
+	TSM.db.realm.tradeSkills[playerName][skillName] = TSM.db.realm.tradeSkills[playerName][skillName] or {}
+	TSM.db.realm.tradeSkills[playerName][skillName].link = TSM.isSyncing.link
+	TSM.db.realm.tradeSkills[playerName][skillName].accountKey = TSM.isSyncing.accountKey
+	TSM.db.realm.tradeSkills[playerName][skillName].level = level
+	TSM.db.realm.tradeSkills[playerName][skillName].maxLevel = maxLevel
 end
 
 function Util:GetSpellID(index)

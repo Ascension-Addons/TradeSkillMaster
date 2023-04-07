@@ -85,6 +85,7 @@ function GUI:OnEnable()
 	GUI:RegisterEvent("TRADE_SKILL_FILTER_UPDATE", "EventHandler")
 	GUI:RegisterEvent("UPDATE_TRADESKILL_RECAST", "EventHandler")
 	GUI:RegisterEvent("CHAT_MSG_SKILL", "EventHandler")
+	GUI:RegisterEvent("UNIT_SPELLCAST_START", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_FAILED", "EventHandler")
@@ -116,7 +117,7 @@ function GUI:OnEnable()
 
 	GUI:UpdateTradeSkills()
 	GUI.gatheringFrame = GUI:CreateGatheringFrame()
-	if next(TSM.db.factionrealm.gathering.neededMats) then
+	if next(TSM.db.realm.gathering.neededMats) then
 		TSMAPI:CreateTimeDelay("gatheringShowThrottle", 0.3, GUI:ShowGatheringFrame())
 	end
 end
@@ -203,7 +204,7 @@ end
 function GUI:OpenFirstProfession()
 	TSM.db.global.showingDefaultFrame = nil
 	local link
-	for playerName, professions in pairs(TSM.db.factionrealm.tradeSkills) do
+	for playerName, professions in pairs(TSM.db.realm.tradeSkills) do
 		for _, data in pairs(professions) do
 			link = data.link
 			if link then break end
@@ -244,22 +245,25 @@ function GUI:EventHandler(event, ...)
 			GUI.frame.content.professionsTab.craftInfoFrame.buttonsFrame.inputBox:SetNumber(GetTradeskillRepeatCount())
 		elseif event == "CHAT_MSG_SKILL" and not IsTradeSkillLinked() then
 			local skillName, level, maxLevel = GetTradeSkillLine()
-			if skillName and skillName ~= "UNKNOWN" and TSM.db.factionrealm.tradeSkills[UnitName("player")] and TSM.db.factionrealm.tradeSkills[UnitName("player")][skillName] then
-				TSM.db.factionrealm.tradeSkills[UnitName("player")][skillName].level = level
-				TSM.db.factionrealm.tradeSkills[UnitName("player")][skillName].maxLevel = maxLevel
+			if skillName and skillName ~= "UNKNOWN" and TSM.db.realm.tradeSkills[UnitName("player")] and TSM.db.realm.tradeSkills[UnitName("player")][skillName] then
+				TSM.db.realm.tradeSkills[UnitName("player")][skillName].level = level
+				TSM.db.realm.tradeSkills[UnitName("player")][skillName].maxLevel = maxLevel
 			end
+		elseif event == "UNIT_SPELLCAST_START" then
+			local unit = ...
+			if unit ~= "player" then return end
+			TSM.currentspell = UnitCastingSpellID("player")
 		elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
-			-- local unit, _, _, _, spellID = ... -- parameter ... doesn't provide spellID in 3.3.5a
-			local unit, spellName = ...
-			local spellID = TSM.SpellName2ID[spellName]
-			
+			-- we only care about our spells
+			local unit = ...
+			if unit ~= "player" then return end
+			-- if spell is not related to crafting, ignore
+			local craft = TSM.currentspell and TSM.db.realm.crafts[TSM.currentspell]
+			if not craft then return end
 			-- if spellID == nil then
 				-- TSM:Printf("Could not find spellID for %s", spellName)
 			-- end
 			
-			local craft = spellID and TSM.db.factionrealm.crafts[spellID]
-			if unit ~= "player" or not craft then return end
-
 			-- decrements the number of this craft that are queued to be crafted
 			craft.queued = craft.queued - 1
 			if GUI.isCrafting and GUI.isCrafting.quantity > 0 then
@@ -268,19 +272,17 @@ function GUI:EventHandler(event, ...)
 					--GUI:UpdateQueue()
 				end
 			end		
-		
+			TSM.currentspell = nil
 			-- TSMAPI:CreateTimeDelay("craftingQueueUpdateThrottle", 0.2, GUI.UpdateQueue)
 		elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_FAILED_QUIET" then
-			-- local unit, _, _, _, spellID = ... -- parameter ... doesn't provide spellID in 3.3.5a
-			local unit, spellName = ...
-			local spellID = TSM.SpellName2ID[spellName]
+			local unit = ...
+			if unit ~= "player" then return end
 
 			-- if spellID == nil then
 				-- TSM:Printf("Could not find spellID for %s", spellName)
 			-- end
 			
-			if unit ~= "player" then return end
-			if GUI.isCrafting and spellID == GUI.isCrafting.spellID then
+			if GUI.isCrafting and TSM.currentspell == GUI.isCrafting.spellID then
 				GUI.isCrafting.quantity = 0
 				TSMAPI:CreateTimeDelay("craftingQueueUpdateThrottle", 0.2, GUI.UpdateQueue)
 			end
@@ -308,7 +310,7 @@ function GUI:UpdateTradeSkills()
 	local skillName, header
 	local tradeSkill1, tradeSkill2, cook, firstAid
 
-	for i = 5, 8 do
+	for i = 1, GetNumSkillLines() do
 		skillName = GetSkillLineInfo(i)
 		if  skillName == "Professions" then --TRADE_SKILLS ) then
 			tradeSkill1, header = GetSkillLineInfo(i + 1);
@@ -324,14 +326,7 @@ function GUI:UpdateTradeSkills()
 			else
 				tradeSkill2=i+2
 			end
-			break
-		end
-	end
-	
-	
-	for i = 5, 10 do
-		skillName = GetSkillLineInfo(i)
-		if  skillName == "Cooking" then
+		elseif  skillName == "Cooking" then
 			cook = i
 		elseif skillName == "First Aid" then
 			firstAid = i
@@ -342,31 +337,31 @@ function GUI:UpdateTradeSkills()
 	local playerName = UnitName("player")
 
 	if not playerName then return end
-	TSM.db.factionrealm.tradeSkills[playerName] = TSM.db.factionrealm.tradeSkills[playerName] or {}
+	TSM.db.realm.tradeSkills[playerName] = TSM.db.realm.tradeSkills[playerName] or {}
 	-- SpellBook_UpdateProfTab()
 
 	-- local tradeSkill1, tradeSkill2, _, _, cook, firstAid = GetProfessions() -- GetProfessions API added in Cata
 	-- local btns = { PrimaryProfession1SpellButtonBottom, PrimaryProfession2SpellButtonBottom, SecondaryProfession3SpellButtonRight, SecondaryProfession4SpellButtonRight }
-	local old = TSM.db.factionrealm.tradeSkills[playerName]
-	--TSM.db.factionrealm.tradeSkills[playerName] = {}
+	local old = TSM.db.realm.tradeSkills[playerName]
+	--TSM.db.realm.tradeSkills[playerName] = {}
 	-- for i, id in pairs({ "tradeSkill1", "tradeSkill2", "cook", "firstAid" }) do
 	for i, id in pairs({ tradeSkill1, tradeSkill2, cook, firstAid }) do -- needs to be pairs since may not be continuous indices
 		-- if not btns[i]:GetParent().missingHeader:IsVisible() then
 			-- local skillName, _, level, maxLevel = GetProfessionInfo(id) -- Also added in Cata
 			local skillName, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(id)
 			if skillName ~= nil then
-				TSM.db.factionrealm.tradeSkills[playerName][skillName] = old[skillName] or {}
-				TSM.db.factionrealm.tradeSkills[playerName][skillName].level = skillRank
-				TSM.db.factionrealm.tradeSkills[playerName][skillName].maxLevel = skillMaxRank
-				TSM.db.factionrealm.tradeSkills[playerName][skillName].isSecondary = (i > 2) and true
+				TSM.db.realm.tradeSkills[playerName][skillName] = old[skillName] or {}
+				TSM.db.realm.tradeSkills[playerName][skillName].level = skillRank
+				TSM.db.realm.tradeSkills[playerName][skillName].maxLevel = skillMaxRank
+				TSM.db.realm.tradeSkills[playerName][skillName].isSecondary = (i > 2) and true
 
 				-- local spellBookSlot = btns[i]:GetID() + btns[i]:GetParent().spellOffset
 				local _, link = GetSpellLink(skillName)
 				if link then
-					TSM.db.factionrealm.tradeSkills[playerName][skillName].link = link
+					TSM.db.realm.tradeSkills[playerName][skillName].link = link
 					if skillName == GetTradeSkillLine() and i <= 2 and not TSM.isSyncing then
-						TSM.db.factionrealm.tradeSkills[playerName][skillName].account = nil
-						TSM.db.factionrealm.tradeSkills[playerName][skillName].accountKey = TSMAPI.Sync:GetAccountKey()
+						TSM.db.realm.tradeSkills[playerName][skillName].account = nil
+						TSM.db.realm.tradeSkills[playerName][skillName].accountKey = TSMAPI.Sync:GetAccountKey()
 						TSM.Sync:BroadcastTradeSkillData()
 					end
 				end
@@ -375,18 +370,18 @@ function GUI:UpdateTradeSkills()
 	end
 
 	--tidy up crafts if player unlearned a profession
-	for spellid, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellid, data in pairs(TSM.db.realm.crafts) do
 		for player in pairs(data.players) do
-			if not TSM.db.factionrealm.tradeSkills[player] or not TSM.db.factionrealm.tradeSkills[player][data.profession] then
-				TSM.db.factionrealm.crafts[spellid].players[player] = nil
+			if not TSM.db.realm.tradeSkills[player] or not TSM.db.realm.tradeSkills[player][data.profession] then
+				TSM.db.realm.crafts[spellid].players[player] = nil
 			end
 		end
 	end
 
 	--remove craft if no players
-	for spellid, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellid, data in pairs(TSM.db.realm.crafts) do
 		if not next(data.players) then
-			TSM.db.factionrealm.crafts[spellid] = nil
+			TSM.db.realm.crafts[spellid] = nil
 		end
 	end
 end
@@ -613,7 +608,7 @@ function GUI:CreateQueueFrame(parent)
 		GameTooltip:SetOwner(self, "ANCHOR_NONE")
 		-- GameTooltip:SetPoint("LEFT", self, "RIGHT")
 		GameTooltip:SetPoint("LEFT", self, "LEFT")
-		GameTooltip:AddLine(TSM.db.factionrealm.crafts[data.spellID].name .. " (x" .. data.numQueued .. ")")
+		GameTooltip:AddLine(TSM.db.realm.crafts[data.spellID].name .. " (x" .. data.numQueued .. ")")
 			
 		local cost = TSM.Cost:GetCraftPrices(data.spellID)	
 		if data.profit then
@@ -665,8 +660,8 @@ function GUI:CreateQueueFrame(parent)
 			end
 		end
 		
-		for itemID, matQuantity in pairs(TSM.db.factionrealm.crafts[data.spellID].mats) do
-			local name = TSMAPI:GetSafeItemInfo(itemID) or (TSM.db.factionrealm.mats[itemID] and TSM.db.factionrealm.mats[itemID].name) or "?"
+		for itemID, matQuantity in pairs(TSM.db.realm.crafts[data.spellID].mats) do
+			local name = TSMAPI:GetSafeItemInfo(itemID) or (TSM.db.realm.mats[itemID] and TSM.db.realm.mats[itemID].name) or "?"
 			
 			local itemIDx = itemID
 			
@@ -675,19 +670,13 @@ function GUI:CreateQueueFrame(parent)
 			if strfind(name, "Vellum") then
 				velName = name
 			end
-			if (velName ~= nil) and (not strfind(velName, "III")) then					
-				local VellumReplacePrice = TSM.Cost:GetMatCost(itemIDx)
-
-				if strfind(velName, "Weapon Vellum") then						
-					if VellumReplacePrice > TSM.Cost:GetMatCost("item:43146:0:0:0:0:0:0") then 
-						itemIDx = "item:43146:0:0:0:0:0:0"
-						name = TSMAPI:GetSafeItemInfo(itemIDx)
-					end
+			if (velName ~= nil) then					
+				if strfind(velName, "Weapon") then						
+					itemIDx = "item:52511:0:0:0:0:0:0"
+					name = TSMAPI:GetSafeItemInfo(itemIDx)
 				else
-					if VellumReplacePrice > TSM.Cost:GetMatCost("item:43145:0:0:0:0:0:0") then 
-						itemIDx = "item:43145:0:0:0:0:0:0"
-						name = TSMAPI:GetSafeItemInfo(itemIDx)						
-					end
+					itemIDx = "item:52510:0:0:0:0:0:0"
+					name = TSMAPI:GetSafeItemInfo(itemIDx)						
 				end
 			end
 				
@@ -716,9 +705,9 @@ function GUI:CreateQueueFrame(parent)
 		else
 			if data.isTitle then
 				if data.stage then
-					TSM.db.factionrealm.queueStatus.collapsed[data.profession .. data.stage] = not TSM.db.factionrealm.queueStatus.collapsed[data.profession .. data.stage]
+					TSM.db.realm.queueStatus.collapsed[data.profession .. data.stage] = not TSM.db.realm.queueStatus.collapsed[data.profession .. data.stage]
 				else
-					TSM.db.factionrealm.queueStatus.collapsed[data.profession] = not TSM.db.factionrealm.queueStatus.collapsed[data.profession]
+					TSM.db.realm.queueStatus.collapsed[data.profession] = not TSM.db.realm.queueStatus.collapsed[data.profession]
 				end
 				GUI:UpdateQueue()
 			elseif data.index then
@@ -825,10 +814,10 @@ function GUI:CreateQueueFrame(parent)
 		GUI:UpdateGatherSelectionWindow()
 		if GUI.gatheringFrame:IsShown() then
 			GUI.gatheringFrame:Hide()
-			TSM.db.factionrealm.gathering.crafter = nil
-			TSM.db.factionrealm.gathering.neededMats = {}
-			TSM.db.factionrealm.gathering.gatheredMats = false
-			TSM.db.factionrealm.sourceStatus.collapsed = {}
+			TSM.db.realm.gathering.crafter = nil
+			TSM.db.realm.gathering.neededMats = {}
+			TSM.db.realm.gathering.gatheredMats = false
+			TSM.db.realm.sourceStatus.collapsed = {}
 		end
 	end)
 	frame.clearBtn = btn
@@ -962,7 +951,7 @@ function GUI:CreateProfessionsTab(parent)
 	local player = UnitName("player")
 	local function UpdateProfession(self)
 		local list = {}
-		for playerName, professionData in pairs(TSM.db.factionrealm.tradeSkills) do
+		for playerName, professionData in pairs(TSM.db.realm.tradeSkills) do
 			for name, data in pairs(professionData) do
 				if not data.isSecondary and playerName == player then -- only display current player profs until blizz fix it
 					list[playerName .. "~" .. name] = format("%s %d/%d - %s", name, data.level or "?", data.maxLevel or "?", playerName)
@@ -993,7 +982,7 @@ function GUI:CreateProfessionsTab(parent)
 				CastSpellByName(profession)
 			end
 		else
-			local link = TSM.db.factionrealm.tradeSkills[playerName][profession].link
+			local link = TSM.db.realm.tradeSkills[playerName][profession].link
 			if not link then
 				TSM:Printf(L["Profession data not found for %s on %s. Logging into this player and opening the profession may solve this issue."], profession, playerName)
 				return OnValueChanged(_, _, currentSelection)
@@ -1199,7 +1188,7 @@ function GUI:CreateCraftInfoFrame(parent)
 	local function OnEnter(self)
 		if not frame.index then return end
 		local spellID = TSM.Util:GetSpellID(frame.index)
-		local itemID = spellID and TSM.db.factionrealm.crafts[spellID] and TSM.db.factionrealm.crafts[spellID].itemID
+		local itemID = spellID and TSM.db.realm.crafts[spellID] and TSM.db.realm.crafts[spellID].itemID
 		if itemID then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 			TSMAPI:SafeTooltipLink(itemID)
@@ -1402,20 +1391,20 @@ function GUI:CreateCraftInfoFrame(parent)
 	queueBtn:RegisterForClicks("AnyUp")
 	queueBtn:SetScript("OnClick", function(_, button)
 		local spellID = TSM.Util:GetSpellID(frame.index)
-		if not spellID or not TSM.db.factionrealm.crafts[spellID] then return end
+		if not spellID or not TSM.db.realm.crafts[spellID] then return end
 
-		TSM.db.factionrealm.crafts[spellID].queued = max(TSM.db.factionrealm.crafts[spellID].queued, 0)
+		TSM.db.realm.crafts[spellID].queued = max(TSM.db.realm.crafts[spellID].queued, 0)
 		if button == "LeftButton" then
 			if IsModifiedClick() then
-				TSM.db.factionrealm.crafts[spellID].queued = select(3, GetTradeSkillInfo(frame.index)) or 0
+				TSM.db.realm.crafts[spellID].queued = select(3, GetTradeSkillInfo(frame.index)) or 0
 			else
-				TSM.db.factionrealm.crafts[spellID].queued = (TSM.db.factionrealm.crafts[spellID].queued or 0) + buttonsFrame.inputBox:GetNumber()
+				TSM.db.realm.crafts[spellID].queued = (TSM.db.realm.crafts[spellID].queued or 0) + buttonsFrame.inputBox:GetNumber()
 			end
 		elseif button == "RightButton" then
 			if IsModifiedClick() then
-				TSM.db.factionrealm.crafts[spellID].queued = 0
+				TSM.db.realm.crafts[spellID].queued = 0
 			else
-				TSM.db.factionrealm.crafts[spellID].queued = max((TSM.db.factionrealm.crafts[spellID].queued or 0) - buttonsFrame.inputBox:GetNumber(), 0)
+				TSM.db.realm.crafts[spellID].queued = max((TSM.db.realm.crafts[spellID].queued or 0) - buttonsFrame.inputBox:GetNumber(), 0)
 			end
 		end
 		GUI:UpdateQueue()
@@ -1455,7 +1444,7 @@ function GUI:CreateCraftInfoFrame(parent)
 		-- Enable display of items created
 		local lNum, hNum = GetTradeSkillNumMade(skillIndex)
 		local numMade = floor(((lNum or 1) + (hNum or 1)) / 2)
-		if altVerb == ENSCRIBE then
+		if altVerb ~= nil and strfind(name,"Enchant ") then
 			numMade = 1
 		end
 		if numMade > 1 then
@@ -1469,7 +1458,7 @@ function GUI:CreateCraftInfoFrame(parent)
 		-- The code below is heavily based on the code in Blizzard_TradeSkillUI.lua.
 		local toolsInfo = BuildColoredListString(GetTradeSkillTools(skillIndex))
 		self.infoFrame.toolsText:SetText(toolsInfo and REQUIRES_LABEL .. " " .. toolsInfo or "")
-		local cooldown, isDayCooldown = GetTradeSkillCooldown(skillIndex)
+		local cooldown = GetTradeSkillCooldown(skillIndex)
 		if not cooldown then
 			self.infoFrame.cooldownText:SetText("");
 		elseif cooldown > 60 * 60 * 24 then --Cooldown is greater than 1 day.
@@ -1492,15 +1481,14 @@ function GUI:CreateCraftInfoFrame(parent)
 			end
 		end
 
-		if altVerb == ENSCRIBE then
+		-- if altVerb == ENSCRIBE then
+		if altVerb ~= nil and strfind(name,"Enchant ") then
 			createAllBtn:SetText(L["Enchant Vellum"])
-			-- createAllBtn.vellum = TSMAPI:GetSafeItemInfo("item:38682:0:0:0:0:0:0")
 			if strfind(name, "Weapon") or strfind(name, "Staff") then
-				createAllBtn.vellum = TSMAPI:GetSafeItemInfo("item:43146:0:0:0:0:0:0") -- Weapon Vellum III
+				createAllBtn.vellum = TSMAPI:GetSafeItemInfo("item:52511:0:0:0:0:0:0") -- Weapon Vellum
 			else
-				createAllBtn.vellum = TSMAPI:GetSafeItemInfo("item:43145:0:0:0:0:0:0") -- Armor Vellum III
+				createAllBtn.vellum = TSMAPI:GetSafeItemInfo("item:52510:0:0:0:0:0:0") -- Armor Vellum
 			end
-			
 		else
 			createAllBtn:SetText(CREATE_ALL)
 			createAllBtn.vellum = nil
@@ -1535,8 +1523,8 @@ function GUI:CreateGroupsTab(parent)
 	RestockGroups = groupTree
 	
 	local function OnCreateBtnClick()
-		if TSM.db.factionrealm.tradeSkills[UnitName("player")][GetTradeSkillLine()] then
-			TSM.db.factionrealm.tradeSkills[UnitName("player")][GetTradeSkillLine()].prompted = nil
+		if TSM.db.realm.tradeSkills[UnitName("player")][GetTradeSkillLine()] then
+			TSM.db.realm.tradeSkills[UnitName("player")][GetTradeSkillLine()].prompted = nil
 		end
 		private.forceCreateGroups = true
 		TSM.Util:ScanCurrentProfession()
@@ -1631,8 +1619,8 @@ function GUI:UpdateProfessionsTabST()
 
 			if not numAvailableAllCache[spellID] then
 				local numAvailableAll = math.huge
-				if spellID and TSM.db.factionrealm.crafts[spellID] then
-					for itemString, quantity in pairs(TSM.db.factionrealm.crafts[spellID].mats) do
+				if spellID and TSM.db.realm.crafts[spellID] then
+					for itemString, quantity in pairs(TSM.db.realm.crafts[spellID].mats) do
 						numAvailableAll = min(numAvailableAll, floor((inventoryTotals[itemString] or 0) / quantity))
 					end
 				end
@@ -1755,12 +1743,12 @@ function GUI:UpdateQueue()
 	for profession, crafts in pairs(queuedCrafts) do
 		local professionColor, playerColor
 		local players = {}
-		for player, data in pairs(TSM.db.factionrealm.tradeSkills) do
+		for player, data in pairs(TSM.db.realm.tradeSkills) do
 			if data[profession] then
 				tinsert(players, player)
 			end
 		end
-		if TSM.db.factionrealm.tradeSkills[UnitName("player")][profession] then
+		if TSM.db.realm.tradeSkills[UnitName("player")][profession] then
 			playerColor = "|cffffffff"
 			if profession == currentProfession then
 				professionColor = "|cffffffff"
@@ -1772,7 +1760,7 @@ function GUI:UpdateQueue()
 			professionColor = "|cffff0000"
 		end
 
-		local professionCollapsed = TSM.db.factionrealm.queueStatus.collapsed[profession]
+		local professionCollapsed = TSM.db.realm.queueStatus.collapsed[profession]
 		local row = {
 			cols = {
 				{
@@ -1786,7 +1774,7 @@ function GUI:UpdateQueue()
 
 		if not professionCollapsed then
 			for _, stage in ipairs(crafts) do
-				local stageCollapsed = TSM.db.factionrealm.queueStatus.collapsed[profession .. stage.name]
+				local stageCollapsed = TSM.db.realm.queueStatus.collapsed[profession .. stage.name]
 				local row = {
 					cols = {
 						{
@@ -1809,7 +1797,7 @@ function GUI:UpdateQueue()
 							velName = GetItemInfo(TSM.VellumInfo[spellID])
 						end
 						
-						for itemID, quantity in pairs(TSM.db.factionrealm.crafts[spellID].mats) do
+						for itemID, quantity in pairs(TSM.db.realm.crafts[spellID].mats) do
 						
 							local MatName = GetItemInfo(itemID)
 							if MatName ~= nil and velName ~= nil and strfind(MatName, "Vellum") then
@@ -1824,12 +1812,6 @@ function GUI:UpdateQueue()
 							canCraft = min(canCraft, floor(numHave / quantity))
 						end
 
-						-- local velName
-						-- local VELLUM_ID = "item:38682:0:0:0:0:0:0"
-						-- if TSM.db.factionrealm.crafts[spellID].mats[VELLUM_ID] then
-							-- velName = GetItemInfo(VELLUM_ID) or TSM.db.factionrealm.mats[VELLUM_ID].name
-						-- end
-						
 						local color
 						local craftIndex = skillIndexLookup[spellID]
 						if canCraft >= numQueued then
@@ -1857,7 +1839,7 @@ function GUI:UpdateQueue()
 
 						local extra = ""
 						if not craftIndex then
-							if TSM.db.factionrealm.crafts[spellID].players[UnitName("player")] and TSM.db.factionrealm.crafts[spellID].profession == currentProfession then
+							if TSM.db.realm.crafts[spellID].players[UnitName("player")] and TSM.db.realm.crafts[spellID].profession == currentProfession then
 								extra = "|cffff0000[Filtered]|r "
 							end
 						end
@@ -1865,7 +1847,7 @@ function GUI:UpdateQueue()
 						local row = {
 							cols = {
 								{
-									value = "        " .. extra .. color .. TSM.db.factionrealm.crafts[spellID].name .. " (x" .. numQueued .. ")" .. "|r",
+									value = "        " .. extra .. color .. TSM.db.realm.crafts[spellID].name .. " (x" .. numQueued .. ")" .. "|r",
 								},
 							},
 							spellID = spellID,
@@ -1946,8 +1928,8 @@ function GUI:UpdateQueue()
 		local row = {
 			cols = {
 				{
-					value = color .. TSM.db.factionrealm.mats[itemString].name .. "|r",
-					args = { TSM.db.factionrealm.mats[itemString].name },
+					value = color .. TSM.db.realm.mats[itemString].name .. "|r",
+					args = { TSM.db.realm.mats[itemString].name },
 				},
 				{
 					value = color .. need .. "|r",
@@ -2035,7 +2017,7 @@ function GUI:CreatePromptFrame(parent)
 	yesBtn:SetScript("OnClick", function()
 		TSM:Printf(L["Created profession group for %s."], frame.profession)
 		TSMAPI:CreatePresetGroups(frame.presetGroupInfo)
-		TSM.db.factionrealm.tradeSkills[UnitName("player")][frame.profession].prompted = true
+		TSM.db.realm.tradeSkills[UnitName("player")][frame.profession].prompted = true
 		frame:Hide()
 		GUI:UpdateProfessionsTabST()
 	end)
@@ -2055,7 +2037,7 @@ function GUI:CreatePromptFrame(parent)
 	noBtn:SetHeight(20)
 	noBtn:SetText(L["No Thanks"])
 	noBtn:SetScript("OnClick", function()
-		TSM.db.factionrealm.tradeSkills[UnitName("player")][frame.profession].prompted = true
+		TSM.db.realm.tradeSkills[UnitName("player")][frame.profession].prompted = true
 		frame:Hide()
 	end)
 	frame.noBtn = noBtn
@@ -2066,7 +2048,7 @@ end
 function GUI:PromptPresetGroups(currentTradeSkill, presetGroupInfo)
 	GUI:RestoreFilters()
 
-	if TSM.db.factionrealm.tradeSkills[UnitName("player")][currentTradeSkill] and not TSM.db.factionrealm.tradeSkills[UnitName("player")][currentTradeSkill].prompted then
+	if TSM.db.realm.tradeSkills[UnitName("player")][currentTradeSkill] and not TSM.db.realm.tradeSkills[UnitName("player")][currentTradeSkill].prompted then
 		GUI.frame.prompt.profession = currentTradeSkill
 		GUI.frame.prompt.presetGroupInfo = presetGroupInfo
 		GUI.frame.prompt:Show()
@@ -2148,7 +2130,7 @@ function GUI:UpdateGatherSelectionWindow()
 	local crafters = {}
 	local numCrafters = 0
 	for profession, _ in pairs(queuedCrafts) do
-		for player, data in pairs(TSM.db.factionrealm.tradeSkills) do
+		for player, data in pairs(TSM.db.realm.tradeSkills) do
 			if data[profession] then
 				crafters[player] = player
 				numCrafters = numCrafters + 1
@@ -2174,7 +2156,7 @@ function GUI:UpdateGatherSelectionWindow()
 		local professions = {}
 		local numProfessions = 0
 		for profession, _ in pairs(queuedCrafts) do
-			if TSM.db.factionrealm.tradeSkills[private.gather.player][profession] then
+			if TSM.db.realm.tradeSkills[private.gather.player][profession] then
 				professions[profession] = profession
 				numProfessions = numProfessions + 1
 			end
@@ -2289,9 +2271,9 @@ function GUI:CreateGatheringFrame()
 	local function OnCraftRowClicked(_, data)
 		if data.isTitle then
 			if data.task then
-				TSM.db.factionrealm.sourceStatus.collapsed[data.source .. data.task] = not TSM.db.factionrealm.sourceStatus.collapsed[data.source .. data.task]
+				TSM.db.realm.sourceStatus.collapsed[data.source .. data.task] = not TSM.db.realm.sourceStatus.collapsed[data.source .. data.task]
 			else
-				TSM.db.factionrealm.sourceStatus.collapsed[data.source] = not TSM.db.factionrealm.sourceStatus.collapsed[data.source]
+				TSM.db.realm.sourceStatus.collapsed[data.source] = not TSM.db.realm.sourceStatus.collapsed[data.source]
 			end
 			GUI:UpdateGathering()
 		end
@@ -2356,10 +2338,10 @@ function GUI:CreateGatheringFrame()
 	--checkbox:SetPoint("BOTTOMRIGHT", checkboxFrame, "BOTTOMRIGHT")
 	checkbox1:SetHeight(18)
 	checkbox1:SetWidth(185)
-	checkbox1:SetValue(TSM.db.factionrealm.gathering.destroyDisable)
+	checkbox1:SetValue(TSM.db.realm.gathering.destroyDisable)
 	checkbox1:SetLabel(L[" Disable Destroying Search"])
 	checkbox1:SetCallback("OnValueChanged", function(_, _, value)
-		TSM.db.factionrealm.gathering.destroyDisable = value
+		TSM.db.realm.gathering.destroyDisable = value
 	end)
 
 	local checkbox2 = TSMAPI.GUI:CreateCheckBox(checkboxFrame, L["If checked, the AH destroying search will only look for even stacks"])
@@ -2368,10 +2350,10 @@ function GUI:CreateGatheringFrame()
 	--checkbox:SetPoint("BOTTOMRIGHT", checkboxFrame, "BOTTOMRIGHT")
 	checkbox2:SetHeight(18)
 	checkbox2:SetWidth(100)
-	checkbox2:SetValue(TSM.db.factionrealm.gathering.evenStacks)
+	checkbox2:SetValue(TSM.db.realm.gathering.evenStacks)
 	checkbox2:SetLabel(L["Even Stacks"])
 	checkbox2:SetCallback("OnValueChanged", function(_, _, value)
-		TSM.db.factionrealm.gathering.evenStacks = value
+		TSM.db.realm.gathering.evenStacks = value
 	end)
 	TSMAPI.Design:SetFrameColor(checkboxFrame)
 
@@ -2384,11 +2366,11 @@ function GUI:CreateGatheringFrame()
 	btn:SetScript("OnClick", function()
 		private.gather = {}
 		GUI.gatheringFrame:Hide()
-		TSM.db.factionrealm.gathering.availableMats = {}
-		TSM.db.factionrealm.gathering.crafter = nil
-		TSM.db.factionrealm.gathering.neededMats = {}
-		TSM.db.factionrealm.gathering.gatheredMats = false
-		TSM.db.factionrealm.gathering.destroyingMats = {}
+		TSM.db.realm.gathering.availableMats = {}
+		TSM.db.realm.gathering.crafter = nil
+		TSM.db.realm.gathering.neededMats = {}
+		TSM.db.realm.gathering.gatheredMats = false
+		TSM.db.realm.gathering.destroyingMats = {}
 		private.currentSource = nil
 	end)
 
@@ -2408,7 +2390,7 @@ end
 
 function GUI:StartGathering()
 	GUI.frame.gather:Hide()
-	TSM.db.factionrealm.gathering.gatheredMats = false
+	TSM.db.realm.gathering.gatheredMats = false
 	local _, queuedMats = TSM.Queue:GetQueue()
 
 	local neededMats = {}
@@ -2423,9 +2405,9 @@ function GUI:StartGathering()
 	if not next(neededMats) then
 		TSM:Print(L["Nothing To Gather"])
 	else
-		TSM.db.factionrealm.gathering.crafter = private.gather.player
-		TSM.db.factionrealm.gathering.professions = private.gather.professions
-		TSM.db.factionrealm.gathering.neededMats = neededMats
+		TSM.db.realm.gathering.crafter = private.gather.player
+		TSM.db.realm.gathering.professions = private.gather.professions
+		TSM.db.realm.gathering.neededMats = neededMats
 		GUI.gatheringFrame:Show()
 		GUI:UpdateGathering()
 	end
@@ -2434,13 +2416,13 @@ end
 
 function GUI:UpdateGathering()
 	if not GUI.gatheringFrame or not GUI.gatheringFrame:IsVisible() then return end
-	if not TSM.db.factionrealm.gathering.crafter or not next(TSM.db.factionrealm.gathering.neededMats) then return end
+	if not TSM.db.realm.gathering.crafter or not next(TSM.db.realm.gathering.neededMats) then return end
 
 	-- recheck the craft queue and update neededMats
 	local _, queuedMats = TSM.Queue:GetQueue()
 	local neededMats = {}
 	for profession, data in pairs(queuedMats) do
-		if TSM.db.factionrealm.gathering.professions[profession] then
+		if TSM.db.realm.gathering.professions[profession] then
 			for itemString, quantity in pairs(data) do
 				neededMats[itemString] = (neededMats[itemString] or 0) + quantity
 			end
@@ -2449,9 +2431,9 @@ function GUI:UpdateGathering()
 
 	local stData = {}
 	local sources = {}
-	local crafter = TSM.db.factionrealm.gathering.crafter
+	local crafter = TSM.db.realm.gathering.crafter
 	local professionList = {}
-	for profession in pairs(TSM.db.factionrealm.gathering.professions) do
+	for profession in pairs(TSM.db.realm.gathering.professions) do
 		tinsert(professionList, profession)
 	end
 
@@ -2466,18 +2448,18 @@ function GUI:UpdateGathering()
 	end
 	if not next(shortItems) then
 		GUI.gatheringFrame:Hide()
-		if TSM.db.factionrealm.gathering.gatheredMats == true then
+		if TSM.db.realm.gathering.gatheredMats == true then
 			TSM:Print("Finished Gathering")
-			TSM.db.factionrealm.gathering.gatheredMats = false
-			TSM.db.factionrealm.gathering.crafter = nil
-			TSM.db.factionrealm.gathering.neededMats = {}
-			TSM.db.factionrealm.gathering.gatheredMats = false
-			TSM.db.factionrealm.sourceStatus.collapsed = {}
-			TSM.db.factionrealm.gathering.destroyingMats = {}
+			TSM.db.realm.gathering.gatheredMats = false
+			TSM.db.realm.gathering.crafter = nil
+			TSM.db.realm.gathering.neededMats = {}
+			TSM.db.realm.gathering.gatheredMats = false
+			TSM.db.realm.sourceStatus.collapsed = {}
+			TSM.db.realm.gathering.destroyingMats = {}
 		end
 		return
 	else
-		TSM.db.factionrealm.gathering.neededMats = CopyTable(neededMats)
+		TSM.db.realm.gathering.neededMats = CopyTable(neededMats)
 	end
 
 	sort(professionList)
@@ -2505,8 +2487,8 @@ function GUI:UpdateGathering()
 		local row = {
 			cols = {
 				{
-					value = color .. TSM.db.factionrealm.mats[itemString].name .. "|r",
-					args = { TSM.db.factionrealm.mats[itemString].name },
+					value = color .. TSM.db.realm.mats[itemString].name .. "|r",
+					args = { TSM.db.realm.mats[itemString].name },
 				},
 				{
 					value = color .. need .. "|r",
@@ -2519,7 +2501,7 @@ function GUI:UpdateGathering()
 			},
 			itemString = itemString,
 			order = order,
-			name = TSM.db.factionrealm.mats[itemString].name,
+			name = TSM.db.realm.mats[itemString].name,
 		}
 		tinsert(stData, row)
 	end
@@ -2548,7 +2530,7 @@ function GUI:UpdateGathering()
 			else
 				color = "|cffffff00"
 			end
-			local sourceCollapsed = TSM.db.factionrealm.sourceStatus.collapsed[source.sourceName]
+			local sourceCollapsed = TSM.db.realm.sourceStatus.collapsed[source.sourceName]
 			local row = {
 				cols = {
 					{
@@ -2562,7 +2544,7 @@ function GUI:UpdateGathering()
 
 			if not sourceCollapsed then
 				for _, task in ipairs(source.tasks) do
-					local tasksCollapsed = TSM.db.factionrealm.sourceStatus.collapsed[source.sourceName .. task.taskType]
+					local tasksCollapsed = TSM.db.realm.sourceStatus.collapsed[source.sourceName .. task.taskType]
 					local row = {
 						cols = {
 							{
@@ -2681,7 +2663,7 @@ function GUI:UpdateGathering()
 		end
 	end
 	-- store the available mats from source
-	TSM.db.factionrealm.gathering.availableMats = CopyTable(availableMats)
+	TSM.db.realm.gathering.availableMats = CopyTable(availableMats)
 
 	GUI.gatheringFrame.gatherButton:SetText(L["Gather Items"])
 	if next(stData) then
@@ -2753,7 +2735,7 @@ end
 
 function CheapestVellum(itemPassed)
 
-		-- Get Cheapest vellum, lower vellum types can be replaced by III
+		-- Return one of the two vellum available
 		local MatName = GetItemInfo(itemPassed)
 		-- MatName is sometimes nil ???
 		if MatName ~= nil then			
@@ -2761,12 +2743,11 @@ function CheapestVellum(itemPassed)
 			if strfind(MatName, "Vellum") then
 				velName = MatName
 			end
-			if (velName ~= nil) and (not strfind(velName, "III")) then						
-				local VellumReplacePrice = TSM.Cost:GetMatCost(itemPassed) or 0
-				if strfind(velName, "Weapon Vellum") then						
-					if VellumReplacePrice > (TSM.Cost:GetMatCost("item:43146:0:0:0:0:0:0") or 0) then itemPassed = "item:43146:0:0:0:0:0:0" end
+			if (velName ~= nil) then						
+				if strfind(velName, "Weapon") then						
+					itemPassed = "item:52511:0:0:0:0:0:0"
 				else
-					if VellumReplacePrice > (TSM.Cost:GetMatCost("item:43145:0:0:0:0:0:0") or 0) then itemPassed = "item:43145:0:0:0:0:0:0" end
+					itemPassed = "item:52510:0:0:0:0:0:0"
 				end
 			end
 		end

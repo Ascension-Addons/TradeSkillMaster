@@ -524,7 +524,7 @@ function Reset:GetAuctionSTRow(record, index)
 	local function GetSellerText(name)
 		if TSMAPI:IsPlayer(name) then
 			return "|cff99ffff" .. name .. "|r"
-		elseif TSM.db.factionrealm.whitelist[strlower(name)] then
+		elseif TSM.db.realm.whitelist[strlower(name)] then
 			return name .. " |cffff2222(" .. L["Whitelist"] .. ")|r"
 		end
 		

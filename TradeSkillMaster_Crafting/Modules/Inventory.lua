@@ -204,7 +204,7 @@
 					end	
 				end	
 				-- add mail tasks for destroyable items bought through shopping search (exclude items already added to mail tasks)	
-				for itemString, quantity in pairs(TSM.db.factionrealm.gathering.destroyingMats) do	
+				for itemString, quantity in pairs(TSM.db.realm.gathering.destroyingMats) do	
 					if mail[itemString] and not shortItems[itemString] then	
 						mailItems[itemString] = quantity	
 					end	
@@ -256,44 +256,44 @@
 			local need = max(quantity - (TSM.Inventory:GetTotalQuantity(itemString) or 0), 0)	
 			-- conversion items	
 			for destroyItem, data in pairs(TSMAPI.Conversions[itemString] or {}) do	
-				if TSM.db.factionrealm.gathering.destroyingMats[destroyItem] then	
+				if TSM.db.realm.gathering.destroyingMats[destroyItem] then	
 					if need > 0 then	
 						local destroyNeed	
 						if data.source == "mill" then	
-							destroyNeed = floor(TSM.db.factionrealm.gathering.destroyingMats[destroyItem] / 5)	
+							destroyNeed = floor(TSM.db.realm.gathering.destroyingMats[destroyItem] / 5)	
 							if destroyNeed > 0 then	
 								millItems[destroyItem] = (millItems[destroyItem] or 0) + destroyNeed	
 							end	
 						elseif data.source == "prospect" then	
-							destroyNeed = floor(TSM.db.factionrealm.gathering.destroyingMats[destroyItem] / 5)	
+							destroyNeed = floor(TSM.db.realm.gathering.destroyingMats[destroyItem] / 5)	
 							if destroyNeed > 0 then	
 								prospectItems[destroyItem] = (prospectItems[destroyItem] or 0) + destroyNeed	
 							end	
 						elseif data.source == "transform" then	
 							if data.rate == 1 / 3 then	
-								destroyNeed = floor(TSM.db.factionrealm.gathering.destroyingMats[destroyItem] / 3)	
+								destroyNeed = floor(TSM.db.realm.gathering.destroyingMats[destroyItem] / 3)	
 							elseif data.rate == 1 / 10 then	
-								destroyNeed = floor(TSM.db.factionrealm.gathering.destroyingMats[destroyItem] / 10)	
+								destroyNeed = floor(TSM.db.realm.gathering.destroyingMats[destroyItem] / 10)	
 							else	
-								destroyNeed = TSM.db.factionrealm.gathering.destroyingMats[destroyItem]	
+								destroyNeed = TSM.db.realm.gathering.destroyingMats[destroyItem]	
 							end	
 							if destroyNeed > 0 then	
 								transformItems[destroyItem] = (transformItems[destroyItem] or 0) + destroyNeed	
 							end	
 						end	
 					else	
-						TSM.db.factionrealm.gathering.destroyingMats[destroyItem] = nil	
+						TSM.db.realm.gathering.destroyingMats[destroyItem] = nil	
 					end	
 				end	
 			end	
 			-- disenchantable items	
-			if next(TSM.db.factionrealm.gathering.destroyingMats) then	
-				for deItemString, quantity in pairs(TSM.db.factionrealm.gathering.destroyingMats) do	
+			if next(TSM.db.realm.gathering.destroyingMats) then	
+				for deItemString, quantity in pairs(TSM.db.realm.gathering.destroyingMats) do	
 					if Inventory:IsDisenchantable(deItemString) then	
 						if need > 0 then	
 							deItems[deItemString] = quantity	
 						else	
-							TSM.db.factionrealm.gathering.destroyingMats[deItemString] = nil	
+							TSM.db.realm.gathering.destroyingMats[deItemString] = nil	
 						end	
 					end	
 				end	

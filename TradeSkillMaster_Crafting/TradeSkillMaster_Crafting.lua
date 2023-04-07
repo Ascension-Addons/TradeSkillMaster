@@ -30,7 +30,7 @@ local savedDBDefaults = {
 		showingDefaultFrame = nil,
 		matsInTooltip = true,
 	},
-	factionrealm = {
+	realm = {
 		tradeSkills = {},
 		crafts = {},
 		mats = {},
@@ -56,78 +56,30 @@ function TSM:OnEnable()
 	TSM:RegisterModule()
 		
 	-- fix vellum issue
-	for spellid, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellid, data in pairs(TSM.db.realm.crafts) do
 		for itemString in pairs(data.mats) do
-			-- if itemString == "item:38682" then
-				-- TSM.db.factionrealm.crafts[spellid].mats["item:38682:0:0:0:0:0:0"] = 1
-			if itemString == "item:43146" then
-				TSM.db.factionrealm.crafts[spellid].mats["item:43146:0:0:0:0:0:0"] = 1
-				TSM.db.factionrealm.crafts[spellid].mats[itemString] = nil
-			elseif itemString == "item:43145" then
-				TSM.db.factionrealm.crafts[spellid].mats["item:43145:0:0:0:0:0:0"] = 1
-				TSM.db.factionrealm.crafts[spellid].mats[itemString] = nil
-			elseif itemString == "item:39350" then
-				TSM.db.factionrealm.crafts[spellid].mats["item:39350:0:0:0:0:0:0"] = 1
-				TSM.db.factionrealm.crafts[spellid].mats[itemString] = nil	
-			elseif itemString == "item:37602" then
-				TSM.db.factionrealm.crafts[spellid].mats["item:37602:0:0:0:0:0:0"] = 1
-				TSM.db.factionrealm.crafts[spellid].mats[itemString] = nil		
-			elseif itemString == "item:39349" then
-				TSM.db.factionrealm.crafts[spellid].mats["item:39349:0:0:0:0:0:0"] = 1
-				TSM.db.factionrealm.crafts[spellid].mats[itemString] = nil			
-			elseif itemString == "item:38682" then
-				TSM.db.factionrealm.crafts[spellid].mats["item:38682:0:0:0:0:0:0"] = 1
-				TSM.db.factionrealm.crafts[spellid].mats[itemString] = nil
+			if itemString == "item:52510" then
+				TSM.db.realm.crafts[spellid].mats["item:52510:0:0:0:0:0:0"] = 1
+				TSM.db.realm.crafts[spellid].mats[itemString] = nil
+			elseif itemString == "item:52511" then
+				TSM.db.realm.crafts[spellid].mats["item:52511:0:0:0:0:0:0"] = 1
+				TSM.db.realm.crafts[spellid].mats[itemString] = nil
 			end
 		end
 	end
-	-- if TSM.db.factionrealm.mats["item:38682"] then
-		-- local name = TSMAPI:GetSafeItemInfo("item:38682:0:0:0:0:0:0") or (GetLocale() == "enUS" and "Enchanting Vellum") or nil
-		-- TSM.db.factionrealm.mats["item:38682:0:0:0:0:0:0"] = {}
-		-- TSM.db.factionrealm.mats["item:38682:0:0:0:0:0:0"].name = name
-		-- TSM.db.factionrealm.mats["item:38682"] = nil
-	-- end
-	if TSM.db.factionrealm.mats["item:43146"] then
-		local name = TSMAPI:GetSafeItemInfo("item:43146:0:0:0:0:0:0") or nil
-		TSM.db.factionrealm.mats["item:43146:0:0:0:0:0:0"] = {}
-		TSM.db.factionrealm.mats["item:43146:0:0:0:0:0:0"].name = name
-		TSM.db.factionrealm.mats["item:43146"] = nil
+	-- if currently casting a spell, keep track of the id
+	TSM.currentspell = nil
+	if TSM.db.realm.mats["item:52510"] then
+		local name = TSMAPI:GetSafeItemInfo("item:52510:0:0:0:0:0:0") or nil
+		TSM.db.realm.mats["item:52510:0:0:0:0:0:0"] = {}
+		TSM.db.realm.mats["item:52510:0:0:0:0:0:0"].name = name
+		TSM.db.realm.mats["item:52510"] = nil
 	end
-	if TSM.db.factionrealm.mats["item:43145"] then
-		local name = TSMAPI:GetSafeItemInfo("item:43145:0:0:0:0:0:0") or nil
-		TSM.db.factionrealm.mats["item:43145:0:0:0:0:0:0"] = {}
-		TSM.db.factionrealm.mats["item:43145:0:0:0:0:0:0"].name = name
-		TSM.db.factionrealm.mats["item:43145"] = nil
-	end
-	if TSM.db.factionrealm.mats["item:39350"] then
-		local name = TSMAPI:GetSafeItemInfo("item:39350:0:0:0:0:0:0") or nil
-		TSM.db.factionrealm.mats["item:39350:0:0:0:0:0:0"] = {}
-		TSM.db.factionrealm.mats["item:39350:0:0:0:0:0:0"].name = name
-		TSM.db.factionrealm.mats["item:39350"] = nil
-	end
-	if TSM.db.factionrealm.mats["item:39350"] then
-		local name = TSMAPI:GetSafeItemInfo("item:39350:0:0:0:0:0:0") or nil
-		TSM.db.factionrealm.mats["item:39350:0:0:0:0:0:0"] = {}
-		TSM.db.factionrealm.mats["item:39350:0:0:0:0:0:0"].name = name
-		TSM.db.factionrealm.mats["item:39350"] = nil
-	end
-	if TSM.db.factionrealm.mats["item:37602"] then
-		local name = TSMAPI:GetSafeItemInfo("item:37602:0:0:0:0:0:0") or nil
-		TSM.db.factionrealm.mats["item:37602:0:0:0:0:0:0"] = {}
-		TSM.db.factionrealm.mats["item:37602:0:0:0:0:0:0"].name = name
-		TSM.db.factionrealm.mats["item:37602"] = nil
-	end
-	if TSM.db.factionrealm.mats["item:39349"] then
-		local name = TSMAPI:GetSafeItemInfo("item:39349:0:0:0:0:0:0") or nil
-		TSM.db.factionrealm.mats["item:39349:0:0:0:0:0:0"] = {}
-		TSM.db.factionrealm.mats["item:39349:0:0:0:0:0:0"].name = name
-		TSM.db.factionrealm.mats["item:39349"] = nil
-	end
-	if TSM.db.factionrealm.mats["item:38682"] then
-		local name = TSMAPI:GetSafeItemInfo("item:38682:0:0:0:0:0:0") or nil
-		TSM.db.factionrealm.mats["item:38682:0:0:0:0:0:0"] = {}
-		TSM.db.factionrealm.mats["item:38682:0:0:0:0:0:0"].name = name
-		TSM.db.factionrealm.mats["item:38682"] = nil
+	if TSM.db.realm.mats["item:52511"] then
+		local name = TSMAPI:GetSafeItemInfo("item:52511:0:0:0:0:0:0") or nil
+		TSM.db.realm.mats["item:52511:0:0:0:0:0:0"] = {}
+		TSM.db.realm.mats["item:52511:0:0:0:0:0:0"].name = name
+		TSM.db.realm.mats["item:52511"] = nil
 	end
 	
 	local func, err = TSMAPI:ParseCustomPrice(TSM.db.global.defaultCraftPriceMethod, "crafting")
@@ -176,7 +128,7 @@ TSM.operationDefaults = {
 	minProfit = 1000000,
 	craftPriceMethod = nil,
 	ignorePlayer = {},
-	ignoreFactionrealm = {},
+	ignorerealm = {},
 	relationships = {},
 }
 
@@ -233,38 +185,11 @@ function TSM:GetTooltip(itemString)
 					tinsert(text, { left = "  " .. L["Crafting Cost"], right = format("%s", costText) })
 				end 
 				
-				if TSM.db.global.matsInTooltip and TSM.db.factionrealm.crafts[spellID] then
-					for matItemString, matQuantity in pairs(TSM.db.factionrealm.crafts[spellID].mats) do
+				if TSM.db.global.matsInTooltip and TSM.db.realm.crafts[spellID] then
+					for matItemString, matQuantity in pairs(TSM.db.realm.crafts[spellID].mats) do
 						local name, _, quality = TSMAPI:GetSafeItemInfo(matItemString)
 						if name then
-							local mat = TSM.db.factionrealm.mats[matItemString]
-							
-							
-							
-							-- Get Cheapest vellum, lower vellum types can be replaced by III
-							local velName
-							if strfind(name, "Vellum") then
-								velName = name
-							end
-							if (velName ~= nil) and (not strfind(velName, "III")) then					
-								local VellumReplacePrice = TSM.Cost:GetMatCost(matItemString)
-
-								if strfind(velName, "Weapon Vellum") then						
-									if VellumReplacePrice > TSM.Cost:GetMatCost("item:43146:0:0:0:0:0:0") then 
-										matItemString = "item:43146:0:0:0:0:0:0"
-										name = TSMAPI:GetSafeItemInfo(matItemString)
-									end
-								else
-									if VellumReplacePrice > TSM.Cost:GetMatCost("item:43145:0:0:0:0:0:0") then 
-										matItemString = "item:43145:0:0:0:0:0:0"
-										name = TSMAPI:GetSafeItemInfo(matItemString)						
-									end
-								end
-							end
-							
-							
-				
-							
+							local mat = TSM.db.realm.mats[matItemString]
 							if mat then
 								local cost = TSM:GetCustomPrice(mat.customValue or TSM.db.global.defaultMatCostMethod, matItemString)
 								if cost then
@@ -292,7 +217,7 @@ function TSM:GetTooltip(itemString)
 		end
 	end
 	if TSM.db.global.materialTooltip then
-		local mat = TSM.db.factionrealm.mats[itemString]
+		local mat = TSM.db.realm.mats[itemString]
 		if mat then
 			local cost = TSM:GetCustomPrice(mat.customValue or TSM.db.global.defaultMatCostMethod, itemString)
 			if cost then
@@ -322,9 +247,9 @@ function TSM:GetCraftingCost(link)
 	TSM:UpdateCraftReverseLookup()
 	local _, cost = TSM.Cost:GetLowestCraftPrices(itemString)
 	if cost then
-		TSM.db.factionrealm.craftingCostCache[itemString] = cost
+		TSM.db.realm.craftingCostCache[itemString] = cost
 	end
-	return TSM.db.factionrealm.craftingCostCache[itemString]
+	return TSM.db.realm.craftingCostCache[itemString]
 end
 
 function TSM:GetCraftingMatCost(link)
@@ -342,7 +267,7 @@ function TSM:UpdateCraftReverseLookup()
 	reverseLookupUpdate = time()
 	TSM.craftReverseLookup = {}
 
-	for spellID, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellID, data in pairs(TSM.db.realm.crafts) do
 		TSM.craftReverseLookup[data.itemID] = TSM.craftReverseLookup[data.itemID] or {}
 		tinsert(TSM.craftReverseLookup[data.itemID], spellID)
 	end
@@ -355,7 +280,7 @@ end
 
 function TSM:getCDCrafts()
 	local crafts = {}
-	for spellID, data in pairs(TSM.db.factionrealm.crafts) do
+	for spellID, data in pairs(TSM.db.realm.crafts) do
 		if data.hasCD then
 			crafts[spellID] = data.name
 		end
@@ -392,7 +317,7 @@ function TSM:RestockHelp(link)
 	-- check that this item is craftable
 	TSM:UpdateCraftReverseLookup()
 	local spellID = TSM.craftReverseLookup[itemString] and TSM.craftReverseLookup[itemString][1]
-	if not spellID or not TSM.db.factionrealm.crafts[spellID] then
+	if not spellID or not TSM.db.realm.crafts[spellID] then
 		return print("You don't know how to craft this item.")
 	end
 	

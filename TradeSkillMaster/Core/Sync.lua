@@ -25,7 +25,7 @@ function Sync:OnEnable()
 	Sync:RegisterEvent("CHAT_MSG_SYSTEM")
 	
 	local data = {characters={}, accountKey=TSMAPI.Sync:GetAccountKey()}
-	for name in pairs(TSM.db.factionrealm.characters) do
+	for name in pairs(TSM.db.realm.characters) do
 		data.characters[name] = TSMAPI.Sync:GetAccountKey()
 	end
 	TSMAPI:CreateTimeDelay("syncSetupDelay", 3, function() TSMAPI.Sync:BroadcastData("TradeSkillMaster", "SETUP", data) end)
@@ -63,7 +63,7 @@ function Sync:OnCommReceived(_, data, _, source)
 	data.__account = nil
 	
 	-- make sure we are getting this from a known source
-	if not TSM.db.factionrealm.syncAccounts[account] and (module ~= "TradeSkillMaster" and not data.isSetup) then return end
+	if not TSM.db.realm.syncAccounts[account] and (module ~= "TradeSkillMaster" and not data.isSetup) then return end
 	private.callbacks[module](key, data, source)
 end
 
@@ -83,7 +83,7 @@ end
 
 
 function TSMAPI.Sync:GetAccountKey()
-	return TSM.db.factionrealm.accountKey
+	return TSM.db.realm.accountKey
 end
 
 function TSM:RegisterSyncCallback(module, callback)
@@ -147,7 +147,7 @@ end
 
 
 function TSMAPI.Sync:BroadcastData(module, key, data)
-	for account, players in pairs(TSM.db.factionrealm.syncAccounts) do
+	for account, players in pairs(TSM.db.realm.syncAccounts) do
 		if account ~= TSMAPI.Sync:GetAccountKey() then
 			local sent
 			for player in pairs(players) do
@@ -173,7 +173,7 @@ end
 
 function private:SendSetupData(target, isResponse, isSetup)
 	local data = {isResponse=isResponse, isSetup=isSetup, characters={}, accountKey=TSMAPI.Sync:GetAccountKey()}
-	for name in pairs(TSM.db.factionrealm.characters) do
+	for name in pairs(TSM.db.realm.characters) do
 		data.characters[name] = true
 	end
 	TSMAPI.Sync:SendData("TradeSkillMaster", "SETUP", data, target)
@@ -190,11 +190,11 @@ end
 
 function TSM:SyncCallback(key, data, source)
 	if key == "SETUP" then
-		if (data.isSetup and strlower(source) ~= strlower(private.syncSetupTarget or "")) or (not data.isSetup and not TSM.db.factionrealm.syncAccounts[data.accountKey]) then
+		if (data.isSetup and strlower(source) ~= strlower(private.syncSetupTarget or "")) or (not data.isSetup and not TSM.db.realm.syncAccounts[data.accountKey]) then
 			return
 		end
 		TSMAPI:Verify(data.accountKey ~= TSMAPI.Sync:GetAccountKey(), "It appears that you've manually copied your saved variables between accounts which will cause TSM's automatic sync'ing to not work. You'll need to undo this, and/or delete the TradeSkillMaster, TSM_Crafting, and TSM_ItemTracker saved variables files on both accounts (with WoW closed) in order to fix this.")
-		TSM.db.factionrealm.syncAccounts[data.accountKey] = data.characters
+		TSM.db.realm.syncAccounts[data.accountKey] = data.characters
 		if data.isSetup then
 			TSMAPI:CloseFrame()
 			TSM:Printf(L["Setup account sync'ing with the account which '%s' is on."], source)

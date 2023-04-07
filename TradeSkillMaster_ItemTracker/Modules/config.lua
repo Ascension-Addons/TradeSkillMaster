@@ -130,7 +130,7 @@ function Config:LoadInventoryViewer(container)
 		filters.characters[name] = true
 	end
 	for name in pairs(TSM.guilds) do
-		if not TSM.db.factionrealm.ignoreGuilds[name] then
+		if not TSM.db.realm.ignoreGuilds[name] then
 			guildList[name] = name
 			filters.guilds[name] = true
 		end
@@ -315,12 +315,12 @@ function Config:LoadOptions(container)
 						{
 							type = "Dropdown",
 							label = L["Guilds (Guild Banks) to Ignore:"],
-							value = TSM.db.factionrealm.ignoreGuilds,
+							value = TSM.db.realm.ignoreGuilds,
 							list = guildList,
 							relativeWidth = 0.49,
 							multiselect = true,
 							callback = function(_, _, key, value)
-								TSM.db.factionrealm.ignoreGuilds[key] = value
+								TSM.db.realm.ignoreGuilds[key] = value
 							end,
 							tooltip = L["Select guilds to ingore in ItemTracker. Inventory will still be tracked but not displayed or taken into consideration by Itemtracker."],
 						},

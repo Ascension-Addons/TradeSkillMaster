@@ -48,7 +48,7 @@ local function GetCommonQueryInfo(name, items)
 		if existingQuery then
 			existingQuery.minLevel = min(existingQuery.minLevel, itemQuery.minLevel)
 			existingQuery.maxLevel = max(existingQuery.maxLevel, itemQuery.maxLevel)
-			existingQuery.quality = min(existingQuery.quality, itemQuery.quality)
+			existingQuery.quality = (existingQuery.quality == itemQuery.quality) and existingQuery.quality or nil
 			if existingQuery.subClass ~= itemQuery.subClass then
 				existingQuery.subClass = nil
 			end
@@ -70,7 +70,7 @@ local function GetCommonQueryInfoClass(class, items)
 		local itemQuery = TSMAPI:GetAuctionQueryInfo(items[i])
 		resultQuery.minLevel = min(resultQuery.minLevel, itemQuery.minLevel)
 		resultQuery.maxLevel = max(resultQuery.maxLevel, itemQuery.maxLevel)
-		resultQuery.quality = min(resultQuery.quality, itemQuery.quality)
+		resultQuery.quality = (resultQuery.quality == itemQuery.quality) and resultQuery.quality or nil
 		if resultQuery.subClass ~= itemQuery.subClass then resultQuery.subClass = nil end
 	end
 	resultQuery.items = items

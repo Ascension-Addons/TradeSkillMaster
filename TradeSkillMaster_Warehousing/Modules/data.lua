@@ -39,7 +39,7 @@ function data:getEmptyRestoreGroup(container, isGuildBank)
 		grp[i] = q * -1 -- convert to negative number for TSMAPI:MoveItems
 		restore[i] = q -- for the restore bagstate
 	end
-	TSM.db.factionrealm.BagState = restore
+	TSM.db.realm.BagState = restore
 	return grp
 end
 
