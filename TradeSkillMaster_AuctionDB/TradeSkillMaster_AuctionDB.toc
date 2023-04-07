@@ -3,7 +3,7 @@
 ## Notes: Stores auction house data and calculates market prices.
 ## Author: Sapu94, Bart39
 ## Version: v2.3.10
-## SavedVariables: TradeSkillMaster_AuctionDBDB
+## SavedVariables: AscensionTSM_AuctionDB
 ## Dependency: TradeSkillMaster
 ## X-Curse-Packaged-Version: v2.3.10
 ## X-Curse-Project-Name: TradeSkillMaster_AuctionDB

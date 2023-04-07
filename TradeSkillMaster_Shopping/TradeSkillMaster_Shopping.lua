@@ -37,7 +37,7 @@ local savedDBDefaults = {
 }
 
 function TSM:OnInitialize()
-	TSM.db = LibStub("AceDB-3.0"):New("TradeSkillMaster_ShoppingDB", savedDBDefaults)
+	TSM.db = LibStub("AceDB-3.0"):New("AscensionTSM_ShoppingDB", savedDBDefaults)
 
 	for name, module in pairs(TSM.modules) do
 		TSM[name] = module

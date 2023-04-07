@@ -54,7 +54,7 @@ local savedDBDefaults = {
 -- Called once the player has loaded WOW.
 function TSM:OnInitialize()
 	-- load the savedDB into TSM.db
-	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMaster_AccountingDB", savedDBDefaults, true)
+	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_AccountingDB", savedDBDefaults, true)
 
 	for module in pairs(TSM.modules) do
 		TSM[module] = TSM.modules[module]

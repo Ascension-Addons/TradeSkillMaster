@@ -40,7 +40,7 @@ local savedDBDefaults = {
 -- Addon loaded
 function TSM:OnInitialize()
 	-- load the savedDB into TSM.db
-	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMaster_AuctioningDB", savedDBDefaults, true)
+	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_AuctioningDB", savedDBDefaults, true)
 
 	for name, module in pairs(TSM.modules) do
 		TSM[name] = module

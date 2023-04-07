@@ -3,7 +3,7 @@
 ## Notes: Manages your inventory by allowing you to easily move predefined groups of items between your bags, bank, and guild bank.
 ## Author: Sapu94, Bart39
 ## Version: v2.0.10
-## SavedVariables: TradeSkillMaster_WarehousingDB
+## SavedVariables: AscensionTSM_WarehousingDB
 ## Dependency: TradeSkillMaster
 
 

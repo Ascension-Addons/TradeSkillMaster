@@ -3,7 +3,7 @@
 ## Notes: Tracks inventory across multiple characters including bags, banks, guild banks, auctions, and mail.
 ## Author: Sapu94, Bart39
 ## Version: v2.0.8
-## SavedVariables: TradeSkillMaster_ItemTrackerDB
+## SavedVariables: AscensionTSM_ItemTrackerDB
 ## Dependency: TradeSkillMaster
 
 Locale\enUS.lua

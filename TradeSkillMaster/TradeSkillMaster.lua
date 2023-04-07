@@ -139,7 +139,7 @@ function TSM:OnInitialize()
 	TSM.moduleNames = nil
 
 	-- load the savedDB into TSM.db
-	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMasterDB", savedDBDefaults, true)
+	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSMDB", savedDBDefaults, true)
 	TSM.db:RegisterCallback("OnProfileChanged", TSM.UpdateModuleProfiles)
 	TSM.db:RegisterCallback("OnProfileCopied", TSM.UpdateModuleProfiles)
 	TSM.db:RegisterCallback("OnProfileReset", TSM.UpdateModuleProfiles)

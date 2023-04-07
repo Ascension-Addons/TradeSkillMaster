@@ -3,7 +3,7 @@
 ## Notes: Makes bulk and one-off milling, prospecting, and disenchanting easier.
 ## Author: Sapu94, Bart39
 ## Version: v2.1.1
-## SavedVariables: TradeSkillMaster_DestroyingDB
+## SavedVariables: AscensionTSM_DestroyingDB
 ## Dependency: TradeSkillMaster
 ## X-Curse-Packaged-Version: v2.1.1
 ## X-Curse-Project-Name: TradeSkillMaster_Destroying

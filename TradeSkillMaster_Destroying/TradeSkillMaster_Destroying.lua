@@ -39,7 +39,7 @@ function TSM:OnInitialize()
 	end
 	
 	-- load the savedDB into TSM.db
-	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMaster_DestroyingDB", savedDBDefaults, true)
+	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_DestroyingDB", savedDBDefaults, true)
 
 	-- register this module with TSM
 	TSM:RegisterModule()

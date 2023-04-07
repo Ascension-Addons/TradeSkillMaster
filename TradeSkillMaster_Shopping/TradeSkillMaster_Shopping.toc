@@ -4,7 +4,7 @@
 ## Author: Sapu94, Bart39
 ## Dependencies: TradeSkillMaster
 ## Version: v2.3.6
-## SavedVariables: TradeSkillMaster_ShoppingDB
+## SavedVariables: AscensionTSM_ShoppingDB
 ## X-Curse-Packaged-Version: v2.3.6
 ## X-Curse-Project-Name: TradeSkillMaster_Shopping
 ## X-Curse-Project-ID: tradeskillmaster_shopping

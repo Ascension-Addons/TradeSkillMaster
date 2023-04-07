@@ -3,7 +3,7 @@
 ## Notes: Provides a rich profession interface complete with a powerful crafting queue.
 ## Author: Sapu94, Bart39
 ## Version: v2.5.2
-## SavedVariables: TradeSkillMaster_CraftingDB
+## SavedVariables: AscensionTSM_CraftingDB
 ## Dependency: TradeSkillMaster, TradeSkillMaster_ItemTracker
 
 Locale\enUS.lua

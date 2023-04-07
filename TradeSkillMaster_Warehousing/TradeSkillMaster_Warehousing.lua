@@ -46,7 +46,7 @@ function TSM:OnEnable()
 	end
 
 	-- load the saved variables table into TSM.db
-	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMaster_WarehousingDB", savedDBDefaults, true)
+	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_WarehousingDB", savedDBDefaults, true)
 	
 	-- register the module with TSM
 	TSM:RegisterModule()

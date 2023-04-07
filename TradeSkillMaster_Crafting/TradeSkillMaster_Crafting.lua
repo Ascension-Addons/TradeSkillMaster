@@ -49,7 +49,7 @@ function TSM:OnEnable()
 	end
 
 	-- load the savedDB into TSM.db
-	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMaster_CraftingDB", savedDBDefaults, true)
+	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_CraftingDB", savedDBDefaults, true)
 	TSM:UpdateCraftReverseLookup()
 	
 	-- register this module with TSM

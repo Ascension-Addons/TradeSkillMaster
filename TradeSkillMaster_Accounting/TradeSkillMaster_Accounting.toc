@@ -3,7 +3,7 @@
 ## Notes: Tracks your gold-flow/sales/purchases and provides you with detailed summaries and lists of this information.
 ## Author: Sapu94, Bart39
 ## Version: v2.3
-## SavedVariables: TradeSkillMaster_AccountingDB
+## SavedVariables: AscensionTSM_AccountingDB
 ## Dependency: TradeSkillMaster
 ## X-Curse-Packaged-Version: v2.3
 ## X-Curse-Project-Name: TradeSkillMaster_Accounting

@@ -44,7 +44,7 @@ local savedDBDefaults = {
 
 function TSM:OnEnable()
 	-- load the savedDB into TSM.db
-	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("TradeSkillMaster_MailingDB", savedDBDefaults, true)
+	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_MailingDB", savedDBDefaults, true)
 	
 	for moduleName, module in pairs(TSM.modules) do
 		TSM[moduleName] = module

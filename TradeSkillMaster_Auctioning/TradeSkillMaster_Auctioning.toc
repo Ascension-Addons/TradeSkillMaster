@@ -4,7 +4,7 @@
 ## Author: Sapu94, Bart39
 ## Version: v2.3.3
 ## Dependency: TradeSkillMaster
-## SavedVariables: TradeSkillMaster_AuctioningDB
+## SavedVariables: AscensionTSM_AuctioningDB
 ## X-Curse-Packaged-Version: v2.3.3
 ## X-Curse-Project-Name: TradeSkillMaster_Auctioning
 ## X-Curse-Project-ID: tradeskillmaster_auctioning
