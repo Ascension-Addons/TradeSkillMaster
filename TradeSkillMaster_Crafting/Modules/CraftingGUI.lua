@@ -275,6 +275,7 @@ function GUI:EventHandler(event, ...)
 					--GUI:UpdateQueue()
 				end
 			end		
+			-- no longer casting a spell so discard spellID
 			TSM.currentspell = nil
 			-- TSMAPI:CreateTimeDelay("craftingQueueUpdateThrottle", 0.2, GUI.UpdateQueue)
 		elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_FAILED_QUIET" then
@@ -289,7 +290,9 @@ function GUI:EventHandler(event, ...)
 				GUI.isCrafting.quantity = 0
 				TSMAPI:CreateTimeDelay("craftingQueueUpdateThrottle", 0.2, GUI.UpdateQueue)
 			end
-		end
+			-- no longer casting a spell so discard spellID
+			TSM.currentspell = nil
+	end
 	end
 end
 
