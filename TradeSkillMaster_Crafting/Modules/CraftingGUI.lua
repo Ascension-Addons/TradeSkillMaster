@@ -317,6 +317,7 @@ function GUI:UpdateTradeSkills()
 		skillName = GetSkillLineInfo(i)
 		if  skillName == "Professions" then --TRADE_SKILLS ) then
 			tradeSkill1, header = GetSkillLineInfo(i + 1);
+			if tradeSkill1 == "Mining" then tradeSkill1 = "Smelting" end
 			if header or not GetSpellInfo(tradeSkill1) then
 				tradeSkill1 = nil
 			else
@@ -324,6 +325,7 @@ function GUI:UpdateTradeSkills()
 			end
 
 			tradeSkill2, header = GetSkillLineInfo(i + 2);
+			if tradeSkill2 == "Mining" then tradeSkill2 = "Smelting" end
 			if header or not GetSpellInfo(tradeSkill2) then
 				tradeSkill2 = nil
 			else
