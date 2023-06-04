@@ -189,7 +189,7 @@ function TSMAPI:IsSoulbound(bag, slot)
 	for id=1, scanTooltip:NumLines() do
 		local text = _G["TSMSoulboundScanTooltipTextLeft" .. id]
 		text = text and text:GetText()
-		if text and ((text == ITEM_BIND_ON_PICKUP and id < 4) or text == ITEM_SOULBOUND or text == ITEM_BIND_QUEST) then
+		if text and ((text == ITEM_BIND_ON_PICKUP and id < 4) or text == ITEM_SOULBOUND or text == ITEM_BIND_QUEST or text == ITEM_ACCOUNTBOUND) then
 			resultsCache[slotID] = {soulbound=true}
 			break
 		end
