@@ -386,7 +386,7 @@ function Scan:GetAllScanQuery()
 	if not canGetAll then return TSM:Print(L["Can't run a GetAll scan right now."]) end
 	if not canScan then return TSMAPI:CreateTimeDelay(0.5, Scan.GetAllScanQuery) end
 	Scan:RegisterEvent("AUCTION_ITEM_LIST_UPDATE")
-	QueryAuctionItems("", nil, nil, nil, nil, nil, nil, nil, nil, true)
+	QueryAuctionItems("", nil, nil, 0, 0, 0, 0, 0, 0, true)
 	TSMAPI.Threading:Start(Scan.ProcessGetAllScan, 1, function()
 		-- Pass through the cached "full scan complete elapsed" value, which ONLY
 		-- contains a value if the latest full scan was successfully completed.
