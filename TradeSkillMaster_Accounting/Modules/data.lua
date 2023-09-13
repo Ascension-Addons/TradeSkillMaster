@@ -373,26 +373,20 @@ function Data:ScanCollectedMail(oFunc, attempt, index, subIndex)
 		end
 	end
 
-	local quantity = 0
-	for j = 1, ATTACHMENTS_MAX_RECEIVE do
-		quantity = select(3, GetInboxItem(index, j))
-	end
-	if quantity == 0 then
-		quantity = 1
-	end
-
 	if invoiceType == "seller" and buyer and buyer ~= "" then -- AH Sales
 		local daysLeft = select(7, GetInboxHeaderInfo(index))
 		local saleTime = (time() + (daysLeft - 30) * SECONDS_PER_DAY)
 		local link = select(2, TSMAPI:GetSafeItemInfo(itemName))
 		local itemString = TSM.db.global.itemStrings[itemName] or TSMAPI:GetItemString(link)
+		local quantity = select(11, GetInboxInvoiceInfo(index)) or 1 -- WotLK doesn't provide quantity sold by default, Ascension does
 		if itemString and private:CanLootMailIndex(index) then
 			local copper = floor((bid - ahcut) / quantity + 0.5)
 			Data:InsertItemSaleRecord(itemString, "Auction", quantity, copper, buyer, saleTime)
 		end
 	elseif invoiceType == "buyer" and buyer and buyer ~= "" then -- AH Buys
-		local link = GetInboxItemLink(index, subIndex or 1)
+		local link = GetInboxItemLink(index, 1)
 		local itemString = TSMAPI:GetItemString(link)
+		local quantity = select(3, GetInboxItem(index, 1))
 		if itemString and private:CanLootMailIndex(index) then
 			--might as well grab the name for future lookups
 			local name = TSMAPI:GetSafeItemInfo(link)
@@ -428,17 +422,18 @@ function Data:ScanCollectedMail(oFunc, attempt, index, subIndex)
 			end
 
 			if total ~= 0 and not ignore and private:CanLootMailIndex(index) then
-				local copper = floor(codAmount / total + 0.5)
+--				local copper = floor(codAmount / total + 0.5)
 				local daysLeft = select(7, GetInboxHeaderInfo(index))
 				local buyTime = (time() + (daysLeft - 3) * SECONDS_PER_DAY)
-				local maxStack = select(8, TSMAPI:GetSafeItemInfo(link))
-				for i = 1, stacks do
+--				local maxStack = select(8, TSMAPI:GetSafeItemInfo(link))
+				Data:InsertItemBuyRecord(itemString, "COD", total, codAmount, sender, buyTime)
+--[[				for i = 1, stacks do
 					local stackSize = (total >= maxStack) and maxStack or total
 					Data:InsertItemBuyRecord(itemString, "COD", stackSize, copper, sender, buyTime)
 					total = total - stackSize
 					if total <= 0 then break end
 				end
-			end
+]]			end
 		end
 	elseif money > 0 and invoiceType ~= "seller" and not strfind(subject, outbid) then
 		local str
