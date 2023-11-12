@@ -16,53 +16,6 @@ local private = {}
 private.gather = {}
 private.shown = {}
 
-local function GetProfessionInfo(id)
-	-- store primary profession names
-	local primary = {}
-	local cooking = {}
-	local firstAid = {}
-	-- find which primary professions we have
-	for i = 1, GetNumSkillLines() do
-		if GetSkillLineInfo(i) == "Professions" then
-			i = i+1 -- skip header
-			while select(2, GetSkillLineInfo(i)) ~= 1 do
-				local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
-				table.insert(primary, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
-				i = i+1
-			end
-		elseif GetSkillLineInfo(i) == "Secondary Skills" then
-			i = i+1 -- skip header
-			while select(2, GetSkillLineInfo(i)) ~= 1 do
-				local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
-				if name == "Cooking" then
-					table.insert(cooking, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
-				elseif name == "First Aid" then
-					table.insert(firstAid, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
-				end
-				i = i+1
-			end
-		end
-	end
-	--local spell, profession = GetSpellLink(primary[1])
-	local profession
-	if id == "tradeSkill1" then
-		profession = primary[1]
-	elseif id == "tradeSkill2" then
-		profession = primary[2]
-	elseif id == "cook" then
-		profession = cooking
-	elseif id == "firstAid" then
-		profession = firstAid
-	else
-		error("Invalid GetProfessionInfo id")
-		return nil
-	end
-	if profession == nil then
-		return nil
-	end
-	return profession.name, nil, profession.skillRank, profession.skillMaxRank
-end
-
 -- Helper function to find spellID associated to spellname
 local function GetTradeSkillSpellID(spellName)
 	-- GetTradeSkillRecipeLink ONLY works when a trade skill window is open, but this should always happen
@@ -159,7 +112,7 @@ function GUI:ShowProfessionWindow()
 	
 	GUI:ShowSwitchButton()
 	if TSM.db.global.showingDefaultFrame then return end
-	GUI:UpdateTradeSkills()
+	GUI:UpdateTradeSkills(GetTradeSkillLine())
 	TradeSkillFrame:SetScript("OnHide", nil)
 	HideUIPanel(TradeSkillFrame)
 	TradeSkillFrame:SetScript("OnHide", function() if not GUI.noClose then GUI.switchBtn:Hide() CloseTradeSkill() end end)
@@ -296,86 +249,51 @@ function GUI:EventHandler(event, ...)
 	end
 end
 
-function GUI:UpdateTradeSkills()
-
---GetSkillLineInfo
-
---1- -Class Skills
---2- spec1
---3- spec2
---4- spec3
---5- - Professions
---6- prof1
---7- prof2
---8- - Secondary Skills
---9- Cooking
---10- First Aid
---11- Fishing
---12- Riding
-
-	local skillName, header
-	local tradeSkill1, tradeSkill2, cook, firstAid
-
-	for i = 1, GetNumSkillLines() do
-		skillName = GetSkillLineInfo(i)
-		if  skillName == "Professions" then --TRADE_SKILLS ) then
-			tradeSkill1, header = GetSkillLineInfo(i + 1);
-			if tradeSkill1 == "Mining" then tradeSkill1 = "Smelting" end
-			if header or not GetSpellInfo(tradeSkill1) then
-				tradeSkill1 = nil
-			else
-				tradeSkill1=i+1
-			end
-
-			tradeSkill2, header = GetSkillLineInfo(i + 2);
-			if tradeSkill2 == "Mining" then tradeSkill2 = "Smelting" end
-			if header or not GetSpellInfo(tradeSkill2) then
-				tradeSkill2 = nil
-			else
-				tradeSkill2=i+2
-			end
-		elseif  skillName == "Cooking" then
-			cook = i
-		elseif skillName == "First Aid" then
-			firstAid = i
-			break
-		end	
-	end
-
+function GUI:UpdateTradeSkills(...)
+	-- Get player name
 	local playerName = UnitName("player")
-
 	if not playerName then return end
-	TSM.db.realm.tradeSkills[playerName] = TSM.db.realm.tradeSkills[playerName] or {}
-	-- SpellBook_UpdateProfTab()
 
-	-- local tradeSkill1, tradeSkill2, _, _, cook, firstAid = GetProfessions() -- GetProfessions API added in Cata
-	-- local btns = { PrimaryProfession1SpellButtonBottom, PrimaryProfession2SpellButtonBottom, SecondaryProfession3SpellButtonRight, SecondaryProfession4SpellButtonRight }
+	local filterTrade = ... -- only re-index the specific trade skill if told to
+
+	local inProfessions = false
+	local inSecondary = false
 	local old = TSM.db.realm.tradeSkills[playerName]
-	--TSM.db.realm.tradeSkills[playerName] = {}
-	-- for i, id in pairs({ "tradeSkill1", "tradeSkill2", "cook", "firstAid" }) do
-	for i, id in pairs({ tradeSkill1, tradeSkill2, cook, firstAid }) do -- needs to be pairs since may not be continuous indices
-		-- if not btns[i]:GetParent().missingHeader:IsVisible() then
-			-- local skillName, _, level, maxLevel = GetProfessionInfo(id) -- Also added in Cata
-			local skillName, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(id)
-			if skillName ~= nil then
+
+	TSM.db.realm.tradeSkills[playerName] = TSM.db.realm.tradeSkills[playerName] or {} -- initialize player data if not found
+
+	-- for each trade skill found, add it to the db
+	for i = 1, GetNumSkillLines() do
+		local skillName, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
+		if  skillName == "Professions" then 
+			inProfessions = true
+		elseif  skillName == "Secondary Skills" then 
+			inProfessions = false
+			inSecondary = true 
+		elseif  skillName == "Weapon Skills" then 
+			inSecondary = false
+		elseif  inProfessions == true or inSecondary == true then 
+			if skillName ~= nil and (not filterTrade or filterTrade == skillName)then
+--				if skillName == "Mining" then skillName = "Smelting" end -- bandaid for mining as related spell is different than craft
 				TSM.db.realm.tradeSkills[playerName][skillName] = old[skillName] or {}
 				TSM.db.realm.tradeSkills[playerName][skillName].level = skillRank
 				TSM.db.realm.tradeSkills[playerName][skillName].maxLevel = skillMaxRank
-				TSM.db.realm.tradeSkills[playerName][skillName].isSecondary = (i > 2) and true
+				TSM.db.realm.tradeSkills[playerName][skillName].isSecondary = inSecondary
 
 				-- local spellBookSlot = btns[i]:GetID() + btns[i]:GetParent().spellOffset
 				local _, link = GetSpellLink(skillName)
 				if link then
 					TSM.db.realm.tradeSkills[playerName][skillName].link = link
-					if skillName == GetTradeSkillLine() and i <= 2 and not TSM.isSyncing then
+					if skillName == GetTradeSkillLine() and inProfessions == true and not TSM.isSyncing then
 						TSM.db.realm.tradeSkills[playerName][skillName].account = nil
 						TSM.db.realm.tradeSkills[playerName][skillName].accountKey = TSMAPI.Sync:GetAccountKey()
 						TSM.Sync:BroadcastTradeSkillData()
 					end
 				end
-			end
-		-- end
+			end			
+		end	
 	end
+
 
 	--tidy up crafts if player unlearned a profession
 	for spellid, data in pairs(TSM.db.realm.crafts) do
