@@ -16,52 +16,52 @@ local private = {}
 private.gather = {}
 private.shown = {}
 
-local function GetProfessionInfo(id)
-	-- store primary profession names
-	local primary = {}
-	local cooking = {}
-	local firstAid = {}
-	-- find which primary professions we have
-	for i = 1, GetNumSkillLines() do
-		if GetSkillLineInfo(i) == "Professions" then
-			i = i+1 -- skip header
-			while select(2, GetSkillLineInfo(i)) ~= 1 do
-				local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
-				table.insert(primary, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
-				i = i+1
-			end
-		elseif GetSkillLineInfo(i) == "Secondary Skills" then
-			i = i+1 -- skip header
-			while select(2, GetSkillLineInfo(i)) ~= 1 do
-				local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
-				if name == "Cooking" then
-					table.insert(cooking, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
-				elseif name == "First Aid" then
-					table.insert(firstAid, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
-				end
-				i = i+1
-			end
-		end
-	end
-	--local spell, profession = GetSpellLink(primary[1])
-	local profession
-	if id == "tradeSkill1" then
-		profession = primary[1]
-	elseif id == "tradeSkill2" then
-		profession = primary[2]
-	elseif id == "cook" then
-		profession = cooking
-	elseif id == "firstAid" then
-		profession = firstAid
-	else
-		error("Invalid GetProfessionInfo id")
-		return nil
-	end
-	if profession == nil then
-		return nil
-	end
-	return profession.name, nil, profession.skillRank, profession.skillMaxRank
-end
+-- local function GetProfessionInfo(id)
+-- 	-- store primary profession names
+-- 	local primary = {}
+-- 	local cooking = {}
+-- 	local firstAid = {}
+-- 	-- find which primary professions we have
+-- 	for i = 1, GetNumSkillLines() do
+-- 		if GetSkillLineInfo(i) == "Professions" then
+-- 			i = i+1 -- skip header
+-- 			while select(2, GetSkillLineInfo(i)) ~= 1 do
+-- 				local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
+-- 				table.insert(primary, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
+-- 				i = i+1
+-- 			end
+-- 		elseif GetSkillLineInfo(i) == "Secondary Skills" then
+-- 			i = i+1 -- skip header
+-- 			while select(2, GetSkillLineInfo(i)) ~= 1 do
+-- 				local name, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(i)
+-- 				if name == "Cooking" then
+-- 					table.insert(cooking, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
+-- 				elseif name == "First Aid" then
+-- 					table.insert(firstAid, {name=name, skillRank=skillRank, skillMaxRank=skillMaxRank})
+-- 				end
+-- 				i = i+1
+-- 			end
+-- 		end
+-- 	end
+-- 	--local spell, profession = GetSpellLink(primary[1])
+-- 	local profession
+-- 	if id == "tradeSkill1" then
+-- 		profession = primary[1]
+-- 	elseif id == "tradeSkill2" then
+-- 		profession = primary[2]
+-- 	elseif id == "cook" then
+-- 		profession = cooking
+-- 	elseif id == "firstAid" then
+-- 		profession = firstAid
+-- 	else
+-- 		error("Invalid GetProfessionInfo id")
+-- 		return nil
+-- 	end
+-- 	if profession == nil then
+-- 		return nil
+-- 	end
+-- 	return profession.name, nil, profession.skillRank, profession.skillMaxRank
+-- end
 
 -- Helper function to find spellID associated to spellname
 local function GetTradeSkillSpellID(spellName)
@@ -313,26 +313,21 @@ function GUI:UpdateTradeSkills()
 --11- Fishing
 --12- Riding
 
-	local skillName, header
-	local tradeSkill1, tradeSkill2, cook, firstAid
-
+	local skillName
+	local cook, firstAid
+	local insideProfessions
+	local tradeSkill = {}
 	for i = 1, GetNumSkillLines() do
 		skillName = GetSkillLineInfo(i)
-		if  skillName == "Professions" then --TRADE_SKILLS ) then
-			tradeSkill1, header = GetSkillLineInfo(i + 1);
-			if tradeSkill1 == "Mining" then tradeSkill1 = "Smelting" end
-			if header or not GetSpellInfo(tradeSkill1) then
-				tradeSkill1 = nil
-			else
-				tradeSkill1=i+1
-			end
-
-			tradeSkill2, header = GetSkillLineInfo(i + 2);
-			if tradeSkill2 == "Mining" then tradeSkill2 = "Smelting" end
-			if header or not GetSpellInfo(tradeSkill2) then
-				tradeSkill2 = nil
-			else
-				tradeSkill2=i+2
+		if skillName == "Professions" then
+      insideProfessions = true
+		elseif skillName == "Secondary Skills"
+		or  skillName == "Weapon Skills" then
+			insideProfessions = false
+		elseif insideProfessions then
+			if skillName == "Mining" then skillName = "Smelting" end
+			if GetSpellInfo(skillName) then
+				table.insert(tradeSkill, i)
 			end
 		elseif  skillName == "Cooking" then
 			cook = i
@@ -346,35 +341,25 @@ function GUI:UpdateTradeSkills()
 
 	if not playerName then return end
 	TSM.db.realm.tradeSkills[playerName] = TSM.db.realm.tradeSkills[playerName] or {}
-	-- SpellBook_UpdateProfTab()
 
-	-- local tradeSkill1, tradeSkill2, _, _, cook, firstAid = GetProfessions() -- GetProfessions API added in Cata
-	-- local btns = { PrimaryProfession1SpellButtonBottom, PrimaryProfession2SpellButtonBottom, SecondaryProfession3SpellButtonRight, SecondaryProfession4SpellButtonRight }
-	local old = TSM.db.realm.tradeSkills[playerName]
-	--TSM.db.realm.tradeSkills[playerName] = {}
-	-- for i, id in pairs({ "tradeSkill1", "tradeSkill2", "cook", "firstAid" }) do
-	for i, id in pairs({ tradeSkill1, tradeSkill2, cook, firstAid }) do -- needs to be pairs since may not be continuous indices
-		-- if not btns[i]:GetParent().missingHeader:IsVisible() then
-			-- local skillName, _, level, maxLevel = GetProfessionInfo(id) -- Also added in Cata
-			local skillName, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(id)
-			if skillName ~= nil then
-				TSM.db.realm.tradeSkills[playerName][skillName] = old[skillName] or {}
-				TSM.db.realm.tradeSkills[playerName][skillName].level = skillRank
-				TSM.db.realm.tradeSkills[playerName][skillName].maxLevel = skillMaxRank
-				TSM.db.realm.tradeSkills[playerName][skillName].isSecondary = (i > 2) and true
+	for i, id in pairs({ tradeSkill[1], tradeSkill[2], tradeSkill[3], tradeSkill[4], tradeSkill[5], tradeSkill[6], tradeSkill[7], tradeSkill[8], tradeSkill[9], tradeSkill[10], cook, firstAid }) do -- needs to be pairs since may not be continuous indices
+		local skillName, _, _, skillRank, _, _, skillMaxRank = GetSkillLineInfo(id)
+		if skillName ~= nil then
+			TSM.db.realm.tradeSkills[playerName][skillName] = TSM.db.realm.tradeSkills[playerName][skillName] or {}
+			TSM.db.realm.tradeSkills[playerName][skillName].level = skillRank
+			TSM.db.realm.tradeSkills[playerName][skillName].maxLevel = skillMaxRank
+			TSM.db.realm.tradeSkills[playerName][skillName].isSecondary = (i > 10) and true
 
-				-- local spellBookSlot = btns[i]:GetID() + btns[i]:GetParent().spellOffset
-				local _, link = GetSpellLink(skillName)
-				if link then
-					TSM.db.realm.tradeSkills[playerName][skillName].link = link
-					if skillName == GetTradeSkillLine() and i <= 2 and not TSM.isSyncing then
-						TSM.db.realm.tradeSkills[playerName][skillName].account = nil
-						TSM.db.realm.tradeSkills[playerName][skillName].accountKey = TSMAPI.Sync:GetAccountKey()
-						TSM.Sync:BroadcastTradeSkillData()
-					end
+			local _, link = GetSpellLink(skillName)
+			if link then
+				TSM.db.realm.tradeSkills[playerName][skillName].link = link
+				if skillName == GetTradeSkillLine() and i <= 10 and not TSM.isSyncing then
+					TSM.db.realm.tradeSkills[playerName][skillName].account = nil
+					TSM.db.realm.tradeSkills[playerName][skillName].accountKey = TSMAPI.Sync:GetAccountKey()
+					TSM.Sync:BroadcastTradeSkillData()
 				end
 			end
-		-- end
+		end
 	end
 
 	--tidy up crafts if player unlearned a profession
