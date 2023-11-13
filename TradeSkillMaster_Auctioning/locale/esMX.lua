@@ -99,6 +99,7 @@ L["General"] = "General" -- Needs review
 L["General Settings"] = "Opciones Generales" -- Needs review
 -- L["Give the new operation a name. A descriptive name will help you find this operation later."] = ""
 L["Help"] = "Ayuda" -- Needs review
+-- L["Hold Alt to cancel 100 auctions at a time"] = ""
 L["How long auctions should be up for."] = "Cuanto tiempo deberian estar las subastas." -- Needs review
 -- L["How many auctions at the lowest price tier can be up at any one time. Setting this to 0 disables posting for any groups this operation is applied to."] = ""
 L["How many items should be in a single auction, 20 will mean they are posted in stacks of 20."] = "Cuantos objetos deberian estar en una sola subasta, 20 significaria que seran subastados en pilas de 20." -- Needs review

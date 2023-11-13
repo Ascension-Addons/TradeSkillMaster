@@ -99,6 +99,7 @@ L["General Reset Settings"] = "일반 재설정 설정" -- Needs review
 L["General Settings"] = "일반 설정"
 L["Give the new operation a name. A descriptive name will help you find this operation later."] = "새 작업의 이름을 지정하세요. 설명이 포함된 이름은 나중에 이 작업을 찾는 데 도움이 됩니다." -- Needs review
 L["Help"] = "도움말"
+-- L["Hold Alt to cancel 100 auctions at a time"] = ""
 L["How long auctions should be up for."] = "경매 지속시간"
 L["How many auctions at the lowest price tier can be up at any one time. Setting this to 0 disables posting for any groups this operation is applied to."] = "한 번에 몇 개의 경매를 등록할지 지정합니다. 0으로 설정하면 이 작업이 적용되는 모든 그룹은 경매 등록을 하지 않습니다." -- Needs review
 L["How many items should be in a single auction, 20 will mean they are posted in stacks of 20."] = "각 경매당 등록할 아이템의 개수를 지정, 20은 20 묶음을 등록한다는 의미입니다." -- Needs review

@@ -65,7 +65,11 @@ end
 
 function Manage:OnGUIEvent(event)
 	if event == "action" then
-		Util:DoAction()
+		if mode == "Cancel" and IsAltKeyDown() then
+			Util:BulkCancel()
+		else
+			Util:DoAction()
+		end
 	elseif event == "skip" then
 		Util:SkipItem()
 	elseif event == "stop" then

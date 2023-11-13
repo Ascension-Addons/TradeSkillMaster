@@ -73,6 +73,7 @@ function private:CreateButtons(parent)
 	button:SetPoint("TOPLEFT")
 	button:SetWidth(80)
 	button:SetHeight(height)
+	button.tooltip = L["Hold Alt to cancel 100 auctions at a time"]
 	button:SetText(L["Cancel"])
 	button.which = "action"
 	button:SetScript("OnClick", OnClick)

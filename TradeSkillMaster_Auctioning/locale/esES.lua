@@ -99,6 +99,7 @@ Could potentially reset %d items for %s profit.]=] ] = "" ]==]
 -- L["General Settings"] = ""
 -- L["Give the new operation a name. A descriptive name will help you find this operation later."] = ""
 -- L["Help"] = ""
+-- L["Hold Alt to cancel 100 auctions at a time"] = ""
 -- L["How long auctions should be up for."] = ""
 -- L["How many auctions at the lowest price tier can be up at any one time. Setting this to 0 disables posting for any groups this operation is applied to."] = ""
 -- L["How many items should be in a single auction, 20 will mean they are posted in stacks of 20."] = ""
