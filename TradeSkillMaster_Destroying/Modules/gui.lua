@@ -236,7 +236,18 @@ end
 function GUI:UNIT_SPELLCAST_INTERRUPTED(_, unit)
 	if unit == "player" and private.frame and private.frame:IsVisible() then
 		TSMAPI:CancelFrame("destroyEnableDelay")
-		private.frame.destroyBtn:Enable()
+		if InCombatLockdown() then
+			TSMAPI:CreateTimeDelay("destroyEnableDelay", 1,
+			function() 
+					if not UnitCastingInfo("player") 
+					and not LootFrame:IsVisible() 
+					and not InCombatLockdown() then
+							private.frame.destroyBtn:Enable()
+					end
+			end)
+		else
+				private.frame.destroyBtn:Enable()
+		end
 	end
 end
 
@@ -271,13 +282,35 @@ function private:LootChanged()
 			local quantity = select(2, GetContainerItemInfo(private.tempData.bag, private.tempData.slot))
 			if quantity == private.tempData.quantity or quantity == private.tempData.perDestroy then
 				TSMAPI:CancelFrame("destroyEnableDelay")
-				private.frame.destroyBtn:Enable()
+				if InCombatLockdown() then
+					TSMAPI:CreateTimeDelay("destroyEnableDelay", 1,
+					function() 
+							if not UnitCastingInfo("player") 
+							and not LootFrame:IsVisible() 
+							and not InCombatLockdown() then
+									private.frame.destroyBtn:Enable()
+							end
+					end)
+				else
+						private.frame.destroyBtn:Enable()
+				end				
 			end
 		end
 	elseif private.highStack and GetNumLootItems() <= 1 then
 		if private.frame and private.frame:IsVisible() then
 			TSMAPI:CancelFrame("destroyEnableDelay")
-			private.frame.destroyBtn:Enable()
+			if InCombatLockdown() then
+				TSMAPI:CreateTimeDelay("destroyEnableDelay", 1,
+				function() 
+						if not UnitCastingInfo("player") 
+						and not LootFrame:IsVisible() 
+						and not InCombatLockdown() then
+								private.frame.destroyBtn:Enable()
+						end
+				end)
+			else
+					private.frame.destroyBtn:Enable()
+			end
 		end
 	end
 end
