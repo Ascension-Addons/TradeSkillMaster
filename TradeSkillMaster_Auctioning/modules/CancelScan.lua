@@ -412,7 +412,15 @@ end
 -- updates the current item to the first one in the list
 function Cancel:UpdateItem(...)
 	local count = ...
-	if #(cancelQueue) == 0 then
+
+	if count then
+		totalCanceled = totalCanceled + count
+	else
+		totalCanceled = totalCanceled + 1
+	end
+	TSM.Manage:UpdateStatus("manage", totalCanceled, totalToCancel)
+
+	if #(cancelQueue) == 0 or totalCanceled >= totalToCancel then
 		GUI.buttons:Disable()
 		if isScanning then
 			TSMAPI:CreateFunctionRepeat("cancelDelayFrame", DelayFrame)
@@ -424,12 +432,6 @@ function Cancel:UpdateItem(...)
 	
 	sort(cancelQueue, function(a, b) return (a.index or 0)>(b.index or 0) end)
 
-	if count then
-		totalCanceled = totalCanceled + count
-	else
-		totalCanceled = totalCanceled + 1
-	end
-	TSM.Manage:UpdateStatus("manage", totalCanceled, totalToCancel)
 	wipe(currentItem)
 	currentItem = cancelQueue[1]
 	TSM.Manage:SetCurrentItem(currentItem)
@@ -441,7 +443,7 @@ function Cancel:BulkCancel()
 	local count = 0
 	-- list may be unsorted before we start
 	sort(cancelQueue, function(a, b) return (a.index or 0)>(b.index or 0) end)
-	print(#(cancelQueue))
+
 	for j=1,#(cancelQueue) do 
 		CancelAuction(cancelQueue[1].index)
 		tinsert(itemsCancelled, CopyTable(cancelQueue[1]))
@@ -449,7 +451,7 @@ function Cancel:BulkCancel()
 		count = count + 1
 		if j >= 100 then break end -- 100 items, stop processing cancels
 	end
-	print(#(cancelQueue), count)
+
 	Cancel:UpdateItem(count)
 end
 
