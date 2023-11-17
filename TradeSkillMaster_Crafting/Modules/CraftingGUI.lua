@@ -16,6 +16,14 @@ local private = {}
 private.gather = {}
 private.shown = {}
 
+-- list of profession skills that do not have crafting. used by UpdateTradeSkills
+local invalidTrade = {
+	["Herbalism"] = true,
+	["Skinning"] = true,
+	["Fishing"] = true,
+	["Riding"] = true
+}
+		
 -- Helper function to find spellID associated to spellname
 local function GetTradeSkillSpellID(spellName)
 	-- GetTradeSkillRecipeLink ONLY works when a trade skill window is open, but this should always happen
@@ -273,8 +281,8 @@ function GUI:UpdateTradeSkills(...)
 		elseif  skillName == "Weapon Skills" then 
 			inSecondary = false
 		elseif  inProfessions == true or inSecondary == true then 
-			if skillName ~= nil and (not filterTrade or filterTrade == skillName)then
---				if skillName == "Mining" then skillName = "Smelting" end -- bandaid for mining as related spell is different than craft
+			if skillName ~= nil and (not filterTrade or filterTrade == skillName) and not invalidTrade[skillName] then
+				if skillName == "Mining" then skillName = "Smelting" end -- bandaid for mining as related spell is different than craft
 				TSM.db.realm.tradeSkills[playerName][skillName] = old[skillName] or {}
 				TSM.db.realm.tradeSkills[playerName][skillName].level = skillRank
 				TSM.db.realm.tradeSkills[playerName][skillName].maxLevel = skillMaxRank
