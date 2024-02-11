@@ -1,4 +1,4 @@
-﻿-- ------------------------------------------------------------------------------ --
+-- ------------------------------------------------------------------------------ --
 --                                TradeSkillMaster                                --
 --                http://www.curse.com/addons/wow/tradeskill-master               --
 --                                                                                --
@@ -234,15 +234,22 @@ function TSM:OnInitialize()
 
 	-- create the main TSM frame
 	TSM:CreateMainFrame()
-
+	local bulkquerybuffer = {}
 	-- fix any items with spaces in them
 	for itemString, groupPath in pairs(TSM.db.profile.items) do
+		-- check if item is cached
+		local _,_,itemID = itemString:find("item:(%d+)")
+		if itemID then
+			local item = Item:CreateFromID(itemID)
+			if not item:IsCached() then bulkquerybuffer[#bulkquerybuffer+1] = item.itemID end
+		end
 		if strfind(itemString, " ") then
 			local newItemString = gsub(itemString, " ", "")
 			TSM.db.profile.items[newItemString] = groupPath
 			TSM.db.profile.items[itemString] = nil
 		end
 	end
+	TSMAPI:BulkQuery(bulkquerybuffer)
 	
 	if TSM.db.profile.deValueSource then
 		TSM.db.profile.destroyValueSource = TSM.db.profile.deValueSource
@@ -705,4 +712,15 @@ function TSM:GetAuctionPlayer(player, player_full)
 	else
 		return player
 	end
+end
+
+-- Bulk load uncached IDs.  Divides in to buckets of 50
+function TSMAPI:BulkQuery(items)
+	self.QueryTicker = Timer.NewTicker(1, function()
+		Item:BulkContinueOnLoad(table.take(items, 50), function(id) end, function(id) return GetItemInfo(id) == nil end) -- 3rd parameter (validator) is optional
+		if #items == 0 then
+			self.QueryTicker:Cancel()
+			self.QueryTicker = nil
+		end
+	end)
 end
