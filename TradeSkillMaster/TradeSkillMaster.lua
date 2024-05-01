@@ -725,3 +725,49 @@ function TSMAPI:BulkQuery(items)
 		end
 	end)
 end
+
+-- GetItemPrice TSMAPI-Extension
+function TSMAPI:GetItemPrices(itemLink)
+    if not itemLink then return nil end
+
+    local prices = {}
+
+    -- Get ItemString from ItemLink
+    local itemString = TSMAPI:GetItemString(itemLink)
+    if not itemString then return nil end
+
+    -- Use TSM:GetCustomPrice to get DBMarket price
+    prices.DBMarket = TSM:GetCustomPrice("DBMarket", itemString) or 0
+
+    -- Use TSM:GetCustomPrice to get DBMinBuyout price
+    prices.DBMinBuyout = TSM:GetCustomPrice("DBMinBuyout", itemString) or 0
+    
+    -- Use TSM:GetCustomPrice to get avgBuy price
+    prices.avgBuy = TSM:GetCustomPrice("avgBuy", itemString) or 0
+
+    -- Use TSM:GetCustomPrice to get avgSell price
+    prices.avgSell = TSM:GetCustomPrice("avgSell", itemString) or 0
+    
+    -- Use TSM:GetCustomPrice to get maxBuy price
+    prices.maxBuy = TSM:GetCustomPrice("maxBuy", itemString) or 0
+
+    -- Use TSM:GetCustomPrice to get maxSell price
+    prices.maxSell = TSM:GetCustomPrice("maxSell", itemString) or 0
+    
+    -- Use TSM:GetCustomPrice to get minBuy price
+    prices.minBuy = TSM:GetCustomPrice("minBuy", itemString) or 0
+
+    -- Use TSM:GetCustomPrice to get minSell price
+    prices.minSell = TSM:GetCustomPrice("minSell", itemString) or 0
+
+    -- Use TSM:GetCustomPrice to get Disenchant price
+    prices.Disenchant = TSM:GetCustomPrice("Disenchant", itemString) or 0
+
+    -- Use TSM:GetCustomPrice to get vendorBuy price
+    prices.vendorBuy = TSM:GetCustomPrice("vendorBuy", itemString) or 0
+    
+    -- Use TSM:GetCustomPrice to get vendorSell price
+    prices.vendorSell = TSM:GetCustomPrice("vendorSell", itemString) or 0
+
+    return prices
+end
