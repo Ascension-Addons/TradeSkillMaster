@@ -106,7 +106,7 @@ function private.Create(parent)
 	-- row 6 - rarity
 	y = y + 60
 	local rarityList = {}
-	for i = 1, 4 do tinsert(rarityList, _G["ITEM_QUALITY"..i.."_DESC"]) end
+	for i = 1, 6 do tinsert(rarityList, _G["ITEM_QUALITY"..i.."_DESC"]) end
 	local rarityDropdown = TSMAPI.GUI:CreateDropdown(frame, rarityList, "")
 	rarityDropdown:SetLabel(L["Minimum Rarity"])
 	rarityDropdown:SetPoint("TOPLEFT", 5, -y)
