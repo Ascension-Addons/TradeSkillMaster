@@ -420,7 +420,7 @@ local function GetItemSubClass(str, class)
 end
 
 local function GetItemRarity(str)
-	for i=0, 4 do
+	for i=0, 7 do
 		local text =  _G["ITEM_QUALITY"..i.."_DESC"]
 		if strlower(str) == strlower(text) then
 			return i
