@@ -115,8 +115,9 @@ function GUI:ShowProfessionWindow()
 		return
 	end
 
-	AscensionTradeSkillFrame:UnregisterEvent("TRADE_SKILL_SHOW")
-	AscensionTradeSkillFrame:OpenOldUI()
+	TradeSkillFrame:UnregisterEvent("TRADE_SKILL_SHOW")
+	-- AscensionTradeSkillFrame:UnregisterEvent("TRADE_SKILL_SHOW")
+	-- AscensionTradeSkillFrame:OpenOldUI()
 
 	GUI:ShowSwitchButton()
 	if TSM.db.global.showingDefaultFrame then return end
