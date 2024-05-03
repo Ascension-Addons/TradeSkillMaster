@@ -99,6 +99,7 @@ L["General Options"] = "Options générales" -- Needs review
 L["General Settings"] = "Paramètres généraux"
 -- L["Give the new operation a name. A descriptive name will help you find this operation later."] = ""
 L["Help"] = "Aide"
+-- L["Hold Alt to cancel 100 auctions at a time"] = ""
 L["How long auctions should be up for."] = "Combien de temps les enchères doivent elles durer. "
 -- L["How many auctions at the lowest price tier can be up at any one time. Setting this to 0 disables posting for any groups this operation is applied to."] = ""
 L["How many items should be in a single auction, 20 will mean they are posted in stacks of 20."] = "Combien d'objets doivent être vendu en une seule enchère, 20 signifiera une seul pile de 20 objets."

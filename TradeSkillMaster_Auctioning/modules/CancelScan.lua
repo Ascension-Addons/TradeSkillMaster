@@ -410,8 +410,17 @@ local function DelayFrame()
 end
 
 -- updates the current item to the first one in the list
-function Cancel:UpdateItem()
-	if #(cancelQueue) == 0 then
+function Cancel:UpdateItem(...)
+	local count = ...
+
+	if count then
+		totalCanceled = totalCanceled + count
+	else
+		totalCanceled = totalCanceled + 1
+	end
+	TSM.Manage:UpdateStatus("manage", totalCanceled, totalToCancel)
+
+	if #(cancelQueue) == 0 or totalCanceled >= totalToCancel then
 		GUI.buttons:Disable()
 		if isScanning then
 			TSMAPI:CreateFunctionRepeat("cancelDelayFrame", DelayFrame)
@@ -423,12 +432,27 @@ function Cancel:UpdateItem()
 	
 	sort(cancelQueue, function(a, b) return (a.index or 0)>(b.index or 0) end)
 
-	totalCanceled = totalCanceled + 1
-	TSM.Manage:UpdateStatus("manage", totalCanceled, totalToCancel)
 	wipe(currentItem)
 	currentItem = cancelQueue[1]
 	TSM.Manage:SetCurrentItem(currentItem)
 	GUI.buttons:Enable()
+end
+
+-- cancel auctions up to 100 at a time
+function Cancel:BulkCancel()
+	local count = 0
+	-- list may be unsorted before we start
+	sort(cancelQueue, function(a, b) return (a.index or 0)>(b.index or 0) end)
+
+	for j=1,#(cancelQueue) do 
+		CancelAuction(cancelQueue[1].index)
+		tinsert(itemsCancelled, CopyTable(cancelQueue[1]))
+		tremove(cancelQueue, 1)
+		count = count + 1
+		if j >= 100 then break end -- 100 items, stop processing cancels
+	end
+
+	Cancel:UpdateItem(count)
 end
 
 -- cancel the current item (gets called when the button is pressed

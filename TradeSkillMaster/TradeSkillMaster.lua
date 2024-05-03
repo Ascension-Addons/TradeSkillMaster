@@ -1,4 +1,4 @@
-﻿-- ------------------------------------------------------------------------------ --
+-- ------------------------------------------------------------------------------ --
 --                                TradeSkillMaster                                --
 --                http://www.curse.com/addons/wow/tradeskill-master               --
 --                                                                                --
@@ -134,7 +134,7 @@ local savedDBDefaults = {
 -- Called once the player has loaded WOW.
 function TSM:OnInitialize()
 	TSMAPI:RegisterForTracing(TSMAPI, "TSMAPI")
-	
+
 	TSM.moduleObjects = nil
 	TSM.moduleNames = nil
 
@@ -149,7 +149,7 @@ function TSM:OnInitialize()
 	else
 		TSM.operations = TSM.db.profile.operations
 	end
-	
+
 	-- Prepare the TradeSkillMasterAppDB database
 	-- We're not using AceDB here on purpose due to bugs in AceDB, but are emulating the parts of it that we need.
 
@@ -234,16 +234,23 @@ function TSM:OnInitialize()
 
 	-- create the main TSM frame
 	TSM:CreateMainFrame()
-
+	local bulkquerybuffer = {}
 	-- fix any items with spaces in them
 	for itemString, groupPath in pairs(TSM.db.profile.items) do
+		-- check if item is cached
+		local _,_,itemID = itemString:find("item:(%d+)")
+		if itemID then
+			local item = Item:CreateFromID(itemID)
+			if not item:IsCached() then bulkquerybuffer[#bulkquerybuffer+1] = item.itemID end
+		end
 		if strfind(itemString, " ") then
 			local newItemString = gsub(itemString, " ", "")
 			TSM.db.profile.items[newItemString] = groupPath
 			TSM.db.profile.items[itemString] = nil
 		end
 	end
-	
+	TSMAPI:BulkQuery(bulkquerybuffer)
+
 	if TSM.db.profile.deValueSource then
 		TSM.db.profile.destroyValueSource = TSM.db.profile.deValueSource
 		TSM.db.profile.deValueSource = nil
@@ -260,7 +267,7 @@ function TSM:RegisterModule()
 	}
 
 	TSM.priceSources = {}
-	
+
 	-- Auctioneer
 	if select(4, GetAddOnInfo("Auc-Advanced")) == 1 and AucAdvanced then
 		if AucAdvanced.Modules.Util.Appraiser and AucAdvanced.Modules.Util.Appraiser.GetPrice then
@@ -273,7 +280,7 @@ function TSM:RegisterModule()
 			tinsert(TSM.priceSources, { key = "AucMarket", label = L["Auctioneer - Market Value"], callback = AucAdvanced.API.GetMarketValue })
 		end
 	end
-	
+
 	-- Auctionator
 	if select(4, GetAddOnInfo("Auctionator")) == 1 and Atr_GetAuctionBuyout then
 		tinsert(TSM.priceSources, { key = "AtrValue", label = L["Auctionator - Auction Value"], callback = Atr_GetAuctionBuyout })
@@ -423,7 +430,7 @@ function TSM:GetTooltip(itemString, quantity)
 					tinsert(text, { left = "  " .. L["Disenchant Value:"], right = TSMAPI:FormatTextMoney(deValue, "|cffffffff", true) })
 				end
 			end
-			
+
 			if TSM.db.profile.detailedDestroyTooltip then
 				local _, itemLink, quality, ilvl, _, iType = TSMAPI:GetSafeItemInfo(itemString)
 				local itemString = TSMAPI:GetItemString(itemLink)
@@ -456,7 +463,7 @@ function TSM:GetTooltip(itemString, quantity)
 			end
 		end
 	end
-	
+
 	-- add mill value info
 	if TSM.db.profile.millTooltip then
 		local millValue = TSM:GetMillValue(itemString)
@@ -474,7 +481,7 @@ function TSM:GetTooltip(itemString, quantity)
 					tinsert(text, { left = "  " .. L["Mill Value:"], right = TSMAPI:FormatTextMoney(millValue, "|cffffffff", true) })
 				end
 			end
-			
+
 			if TSM.db.profile.detailedDestroyTooltip then
 				for _, targetItem in ipairs(TSMAPI:GetConversionTargetItems("mill")) do
 					local herbs = TSMAPI:GetItemConversions(targetItem)
@@ -497,7 +504,7 @@ function TSM:GetTooltip(itemString, quantity)
 			end
 		end
 	end
-	
+
 	-- add prospect value info
 	if TSM.db.profile.prospectTooltip then
 		local prospectValue = TSM:GetProspectValue(itemString)
@@ -515,7 +522,7 @@ function TSM:GetTooltip(itemString, quantity)
 					tinsert(text, { left = "  " .. L["Prospect Value:"], right = TSMAPI:FormatTextMoney(prospectValue, "|cffffffff", true) })
 				end
 			end
-			
+
 			if TSM.db.profile.detailedDestroyTooltip then
 				for _, targetItem in ipairs(TSMAPI:GetConversionTargetItems("prospect")) do
 					local gems = TSMAPI:GetItemConversions(targetItem)
@@ -582,7 +589,7 @@ function TSM:GetTooltip(itemString, quantity)
 			end
 		end
 	end
-	
+
 	for name, method in pairs(TSM.db.global.customPriceSources) do
 		if TSM.db.global.customPriceTooltips[name] then
 			local price = TSM:GetCustomPrice(name, itemString)
@@ -625,7 +632,7 @@ end
 
 function TSM:GetMillValue(itemString)
 	local value = 0
-	
+
 	for _, targetItem in ipairs(TSMAPI:GetConversionTargetItems("mill")) do
 		local herbs = TSMAPI:GetItemConversions(targetItem)
 		if herbs[itemString] then
@@ -633,13 +640,13 @@ function TSM:GetMillValue(itemString)
 			value = value + (matValue or 0) * herbs[itemString].rate
 		end
 	end
-	
+
 	return value
 end
 
 function TSM:GetProspectValue(itemString)
 	local value = 0
-	
+
 	for _, targetItem in ipairs(TSMAPI:GetConversionTargetItems("prospect")) do
 		local gems = TSMAPI:GetItemConversions(targetItem)
 		if gems[itemString] then
@@ -647,7 +654,7 @@ function TSM:GetProspectValue(itemString)
 			value = value + (matValue or 0) * gems[itemString].rate
 		end
 	end
-	
+
 	return value
 end
 
@@ -705,4 +712,16 @@ function TSM:GetAuctionPlayer(player, player_full)
 	else
 		return player
 	end
+end
+
+-- Bulk load uncached IDs.  Divides in to buckets of 50
+function TSMAPI:BulkQuery(items)
+	if not items or #items == 0 then return end
+	self.QueryTicker = Timer.NewTicker(1, function()
+		Item:BulkContinueOnLoad(table.take(items, 50), function(id) end, function(id) return GetItemInfo(id) == nil end) -- 3rd parameter (validator) is optional
+		if #items == 0 then
+			self.QueryTicker:Cancel()
+			self.QueryTicker = nil
+		end
+	end)
 end

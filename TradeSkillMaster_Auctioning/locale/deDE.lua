@@ -104,6 +104,7 @@ L["General Reset Settings"] = "Allgemeine Reset Einstellungen" -- Needs review
 L["General Settings"] = "Allgemeine Optionen"
 L["Give the new operation a name. A descriptive name will help you find this operation later."] = "Gib der neuen Operation einen Namen. Ein beschreibender Name hilft dir die Operation später wieder zu finden." -- Needs review
 L["Help"] = "Hilfe"
+-- L["Hold Alt to cancel 100 auctions at a time"] = ""
 L["How long auctions should be up for."] = "Wielange Auktionen dauern sollen."
 L["How many auctions at the lowest price tier can be up at any one time. Setting this to 0 disables posting for any groups this operation is applied to."] = "Wieviele Auktionen sollen zum niedrigsten Preis auf einmal erstellt werden. Wenn auf 0 gesetzt werden keine Auktionen für alle Gruppen die diese Operation verwenden erstellt." -- Needs review
 L["How many items should be in a single auction, 20 will mean they are posted in stacks of 20."] = "Wieviele Items sollen pro Auktion versteigert werden? 20 bedeutet, dass sie als Stacks (Paket) von 20 Items ins Auktionshaus gesetzt werden." -- Needs review
