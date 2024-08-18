@@ -76,7 +76,7 @@ local function CreateCustomPriceFrame()
 		},
 		{
 			type = "Label",
-			text = format("See %s for more info.", TSMAPI.Design:GetInlineColor("link").."http://bit.ly/TSMCP|r"),
+			text = format("See %s for more info.", TSMAPI.Design:GetInlineColor("link").."https://tinyurl.com/tsm2Ascension|r"),
 			relativeWidth = 1,
 		},
 		{
