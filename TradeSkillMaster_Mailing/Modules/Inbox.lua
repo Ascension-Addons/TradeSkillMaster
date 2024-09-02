@@ -259,12 +259,16 @@ function private:InboxUpdate()
 		mailInfo[i] = ""
 		local isInvoice = select(4, GetInboxText(i))
 		--local _, _, sender, subject, money, cod, _, hasItem = GetInboxHeaderInfo(index)
-		local _, _, sender, subject, money, cod, daysLeft, hasItem, _, _, _, _, _, itemQuantity = GetInboxHeaderInfo(i)
+		local _, _, sender, subject, money, cod, daysLeft, hasItem, _, _, _, _, _ = GetInboxHeaderInfo(i)
 		if isInvoice then
-			local invoiceType, itemName, playerName, bid, buyout, deposit, ahcut, _, _, _, quantity = GetInboxInvoiceInfo(i)
-			
+			local invoiceType, itemName, playerName, bid, buyout, deposit, ahcut = GetInboxInvoiceInfo(i)
+
+			sender = sender or "?"
+			if hasItem then
+				quantity = select(3, GetInboxItem(index))
+			end
 			-- fix MoP difference
-			if (quantity == nil) then quantity = itemQuantity end
+			if (quantity == nil) then quantity = 0 end
 			
 			if invoiceType == "buyer" then
 				local itemLink = GetInboxItemLink(i, 1) or itemName
@@ -276,7 +280,7 @@ function private:InboxUpdate()
 			elseif invoiceType == "seller_temp_invoice" then
 				mailInfo[i] = format("Pending Sale: %s | %s | %s", itemName, TSMAPI:FormatTextMoney(bid - ahcut, yellowColor), FormatDaysLeft(daysLeft, i))
 			end
-		elseif hasItem then
+		elseif hasItem and hasItem > 1 then
 			local itemLink
 			local quantity = 0
 			for j = 1, hasItem do
@@ -317,27 +321,27 @@ function private:InboxUpdate()
 
 	private:UpdateTopLabel()
 
-	-- Yay nothing else to loot, so nothing else to update the cache for!
-	if private.cacheFrame.endTime and numMail == totalMail and private.lastTotal ~= totalMail then
-		private.cacheFrame.endTime = nil
-		private.cacheFrame:Hide()
-		-- Start a timer since we're over the limit of 50 items before waiting for it to recache
-	elseif (private.cacheFrame.endTime and numMail >= 50 and private.lastTotal ~= totalMail) or (numMail >= 50 and private.allowTimerStart) then
-		private.resetIndex = nil
-		private.allowTimerStart = nil
-		private.waitingForData = nil
-		private.lastTotal = totalMail
-		private.cacheFrame.endTime = GetTime() + 60
-		private.cacheFrame:Show()
-	end
+	-- -- Yay nothing else to loot, so nothing else to update the cache for!
+	-- if private.cacheFrame.endTime and numMail == totalMail and private.lastTotal ~= totalMail then
+	-- 	private.cacheFrame.endTime = nil
+	-- 	private.cacheFrame:Hide()
+	-- 	-- Start a timer since we're over the limit of 50 items before waiting for it to recache
+	-- elseif (private.cacheFrame.endTime and numMail >= 50 and private.lastTotal ~= totalMail) or (numMail >= 50 and private.allowTimerStart) then
+	-- 	private.resetIndex = nil
+	-- 	private.allowTimerStart = nil
+	-- 	private.waitingForData = nil
+	-- 	private.lastTotal = totalMail
+	-- 	private.cacheFrame.endTime = GetTime() + 60
+	-- 	private.cacheFrame:Show()
+	-- end
 
 	-- The last item we setup to auto loot is finished, time for the next one
 	if not private.frame.buttonsEnabled then
-		if private.autoLootTotal ~= numMail then
-			private.autoLootTotal = GetInboxNumItems()
+		-- if private.autoLootTotal ~= numMail then
+		-- 	private.autoLootTotal = GetInboxNumItems()
 
 			-- If we're auto checking mail when new data is available, will wait and continue auto looting, otherwise we just stop now
-			if numMail == 0 and (not TSM.db.global.autoCheck or totalMail == 0) then
+			if totalMail == 0 then
 				private:StopAutoLooting()
 			else
 				private:AutoLoot()
@@ -350,7 +354,7 @@ function private:InboxUpdate()
 					return private:AutoLoot()
 				end
 			end)
-		end
+		-- end
 	end
 end
 
@@ -487,14 +491,18 @@ end
 function private:LootMailItem(index)
 	if TSM.db.global.inboxMessages then
 		--local _, _, sender, subject, money, cod, _, hasItem = GetInboxHeaderInfo(index)
-		local _, _, sender, subject, money, cod, _, hasItem, _, _, _, _, _, itemQuantity = GetInboxHeaderInfo(index)
+		local _, _, sender, subject, money, cod, _, hasItem, _, _, _, _, _ = GetInboxHeaderInfo(index)
 		sender = sender or "?"
-		if select(4, GetInboxText(index)) then
+		isTakeable = select(4, GetInboxText(index))
+		if hasItem then
+			quantity = select(3, GetInboxItem(index))
+		end
+		if isTakeable then
 			-- it's an invoice
-			local invoiceType, itemName, playerName, bid, _, _, ahcut, _, _, _, quantity = GetInboxInvoiceInfo(index)
+			local invoiceType, itemName, playerName, bid, _, _, ahcut = GetInboxInvoiceInfo(index)
 
 			-- fix MoP difference
-			if (quantity == nil) then quantity = itemQuantity end
+			if (quantity == nil) then quantity = 0 end --itemQuantity end
 
 			local redColor = "|cffFF0000"
 			local greenColor = "|cff00FF00"
@@ -502,7 +510,7 @@ function private:LootMailItem(index)
 			
 			if invoiceType == "buyer" then
 				local itemLink = GetInboxItemLink(index, 1) or itemName
-				TSM:Printf(L["Collected purchase of %s (%d) for %s."], itemLink, quantity, TSMAPI:FormatTextMoney(bid, redColor))
+				TSM:Printf(L["Collected purchase of %s (%d) for %s."], itemLink, quantity or 0, TSMAPI:FormatTextMoney(bid, redColor))
 			elseif invoiceType == "seller" then
 				--TSM:Printf(L["Collected sale of %s (%d) for %s."], itemName, quantity, TSMAPI:FormatTextMoney(bid - ahcut, greenColor))
 				TSM:Printf("Collected sale of %s for %s.", itemName, TSMAPI:FormatTextMoney(bid - ahcut, greenColor))
@@ -511,7 +519,7 @@ function private:LootMailItem(index)
 				DeleteInboxItem(index)
 				return
 			end
-		elseif hasItem then
+		elseif hasItem and hasItem > 1 then
 			local itemLink
 			local quantity = 0
 			for i = 1, hasItem do
