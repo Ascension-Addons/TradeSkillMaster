@@ -50,7 +50,6 @@ function GUI:OnEnable()
 	GUI:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED", "EventHandler")
 	GUI:RegisterEvent("UNIT_SPELLCAST_FAILED", "EventHandler")
-	GUI:RegisterEvent("UNIT_SPELLCAST_FAILED_QUIET", "EventHandler")
 	GUI:RegisterEvent("GUILDBANKFRAME_OPENED", "GatheringEventHandler")
 	GUI:RegisterEvent("GUILDBANKFRAME_CLOSED", "GatheringEventHandler")
 	GUI:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED", "GatheringEventHandler")
@@ -240,7 +239,7 @@ function GUI:EventHandler(event, ...)
 			-- no longer casting a spell so discard spellID
 			TSM.currentspell = nil
 			-- TSMAPI:CreateTimeDelay("craftingQueueUpdateThrottle", 0.2, GUI.UpdateQueue)
-		elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_FAILED_QUIET" then
+		elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" then
 			local unit = ...
 			if unit ~= "player" then return end
 
