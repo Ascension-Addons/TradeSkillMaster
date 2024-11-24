@@ -263,18 +263,22 @@ function private:InboxUpdate()
 		if isInvoice then
 			local invoiceType, itemName, playerName, bid, buyout, deposit, ahcut, _, _, _, quantity = GetInboxInvoiceInfo(i)
 			
+			sender = sender or "?"
+			if sender == "Blackwater Auction House" then sender = "AH" end
+			if not quantity then
+				quantity = select(3, GetInboxItem(i))
+			end
 			-- fix MoP difference
-			if (quantity == nil) then quantity = itemQuantity end
-			
 			if invoiceType == "buyer" then
 				local itemLink = GetInboxItemLink(i, 1) or itemName
-				mailInfo[i] = format(L["Buy: %s (%d) | %s | %s"], itemLink, quantity or 0, TSMAPI:FormatTextMoney(bid, redColor), FormatDaysLeft(daysLeft, i))
+				mailInfo[i] = format(L["Buy: %s (%d) | %s | %s"], itemLink, quantity or 1, TSMAPI:FormatTextMoney(bid, redColor), FormatDaysLeft(daysLeft, i))
 			elseif invoiceType == "seller" then
 				collectGold = collectGold + bid - ahcut
-				--mailInfo[i] = format(L["Sale: %s (%d) | %s | %s"], itemName, quantity, TSMAPI:FormatTextMoney(bid - ahcut, greenColor), FormatDaysLeft(daysLeft, i))
-				mailInfo[i] = format("Sale: %s | %s | %s", itemName, TSMAPI:FormatTextMoney(bid - ahcut, greenColor), FormatDaysLeft(daysLeft, i))
+				mailInfo[i] = format(L["Sale: %s (%d) | %s | %s"], itemName, quantity or 1, TSMAPI:FormatTextMoney(bid - ahcut, greenColor), FormatDaysLeft(daysLeft, i))
+				-- mailInfo[i] = format("Sale: %s | %s | %s", itemName, TSMAPI:FormatTextMoney(bid - ahcut, greenColor), FormatDaysLeft(daysLeft, i))
 			elseif invoiceType == "seller_temp_invoice" then
-				mailInfo[i] = format("Pending Sale: %s | %s | %s", itemName, TSMAPI:FormatTextMoney(bid - ahcut, yellowColor), FormatDaysLeft(daysLeft, i))
+				mailInfo[i] = format("Pending Sale: %s (%d) | %s | %s", itemName, quantity or 1, TSMAPI:FormatTextMoney(bid - ahcut, yellowColor), FormatDaysLeft(daysLeft, i))
+				-- mailInfo[i] = format("Pending Sale: %s | %s | %s", itemName, TSMAPI:FormatTextMoney(bid - ahcut, yellowColor), FormatDaysLeft(daysLeft, i))
 			end
 		elseif hasItem then
 			local itemLink
@@ -487,14 +491,17 @@ end
 function private:LootMailItem(index)
 	if TSM.db.global.inboxMessages then
 		--local _, _, sender, subject, money, cod, _, hasItem = GetInboxHeaderInfo(index)
-		local _, _, sender, subject, money, cod, _, hasItem, _, _, _, _, _, itemQuantity = GetInboxHeaderInfo(index)
+		local _, _, sender, subject, money, cod, daysLeft, hasItem, _, _, _, _, _, itemQuantity = GetInboxHeaderInfo(index)
 		sender = sender or "?"
-		if select(4, GetInboxText(index)) then
+		isTakeable = select(4, GetInboxText(index))
+		if isTakeable then
 			-- it's an invoice
 			local invoiceType, itemName, playerName, bid, _, _, ahcut, _, _, _, quantity = GetInboxInvoiceInfo(index)
 
 			-- fix MoP difference
-			if (quantity == nil) then quantity = itemQuantity end
+			if not quantity then
+				quantity = select(3, GetInboxItem(index))
+			end
 
 			local redColor = "|cffFF0000"
 			local greenColor = "|cff00FF00"
@@ -502,12 +509,13 @@ function private:LootMailItem(index)
 			
 			if invoiceType == "buyer" then
 				local itemLink = GetInboxItemLink(index, 1) or itemName
-				TSM:Printf(L["Collected purchase of %s (%d) for %s."], itemLink, quantity, TSMAPI:FormatTextMoney(bid, redColor))
+				TSM:Printf(L["Collected purchase of %s (%d) for %s."], itemLink, quantity or 1, TSMAPI:FormatTextMoney(bid, redColor))
 			elseif invoiceType == "seller" then
-				--TSM:Printf(L["Collected sale of %s (%d) for %s."], itemName, quantity, TSMAPI:FormatTextMoney(bid - ahcut, greenColor))
-				TSM:Printf("Collected sale of %s for %s.", itemName, TSMAPI:FormatTextMoney(bid - ahcut, greenColor))
+				TSM:Printf(L["Collected sale of %s (%d) for %s."], itemName, quantity or 1, TSMAPI:FormatTextMoney(bid - ahcut, greenColor))
+				-- TSM:Printf("Collected sale of %s for %s.", itemName, TSMAPI:FormatTextMoney(bid - ahcut, greenColor))
 			elseif invoiceType == "seller_temp_invoice" then
-				TSM:Printf("Removing pending sale: %s (%s)", itemName, TSMAPI:FormatTextMoney(bid - ahcut, yellowColor))
+				-- TSM:Printf("Removing pending sale: %s (%s)", itemName, TSMAPI:FormatTextMoney(bid - ahcut, yellowColor))
+				TSM:Printf("Removing pending sale of %s (%d) for %s.", itemName, quantity or 1, TSMAPI:FormatTextMoney(bid - ahcut, yellowColor))
 				DeleteInboxItem(index)
 				return
 			end
