@@ -451,8 +451,8 @@ function private:AutoLoot()
 		return
 	end
 
-	local money, cod, _, items, _, _, _, _, isGM = select(5, GetInboxHeaderInfo(private.lootIndex))
-	if not isGM and (not cod or cod <= 0) and ((money and money > 0) or (items and items > 0)) or GetInboxInvoiceInfo(private.lootIndex) == "seller_temp_invoice" then
+	local _, _, sender, subject, money, cod, _, items, _, _, _, _, isGM = GetInboxHeaderInfo(private.lootIndex) 
+	if (sender == "The Postmaster" or sender == "Blackwater Auction House" or sender == "Customer Support") or not isGM and (not cod or cod <= 0) and ((money and money > 0) or (items and items > 0)) or GetInboxInvoiceInfo(private.lootIndex) == "seller_temp_invoice" then
 		TSMAPI:CancelFrame("mailWaitDelay")
 		if private.mode == "all" then
 			if money > 0 then
@@ -544,6 +544,9 @@ function private:LootMailItem(index)
 			end
 		elseif money > 0 then
 			TSM:Printf(L["Collected %s from %s."], TSMAPI:FormatTextMoney(money, greenColor), sender)
+		elseif (sender == "The Postmaster" or sender == "Blackwater Auction House" or sender == "Customer Support" and subject == "Your Ascension Order" and daysLeft < 270) and money == 0 and hasItem == nil then
+			TSM:Printf("Removing empty mail from %s.", sender)
+			DeleteInboxItem(index)
 		else
 			TSM:Printf(L["Collected mail from %s with a subject of '%s'."], sender, subject)
 		end
