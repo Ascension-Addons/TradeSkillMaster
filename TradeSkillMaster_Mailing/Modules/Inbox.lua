@@ -317,27 +317,27 @@ function private:InboxUpdate()
 
 	private:UpdateTopLabel()
 
-	-- Yay nothing else to loot, so nothing else to update the cache for!
-	if private.cacheFrame.endTime and numMail == totalMail and private.lastTotal ~= totalMail then
-		private.cacheFrame.endTime = nil
-		private.cacheFrame:Hide()
-		-- Start a timer since we're over the limit of 50 items before waiting for it to recache
-	elseif (private.cacheFrame.endTime and numMail >= 50 and private.lastTotal ~= totalMail) or (numMail >= 50 and private.allowTimerStart) then
-		private.resetIndex = nil
-		private.allowTimerStart = nil
-		private.waitingForData = nil
-		private.lastTotal = totalMail
-		private.cacheFrame.endTime = GetTime() + 60
-		private.cacheFrame:Show()
-	end
+	-- -- Yay nothing else to loot, so nothing else to update the cache for!
+	-- if private.cacheFrame.endTime and numMail == totalMail and private.lastTotal ~= totalMail then
+	-- 	private.cacheFrame.endTime = nil
+	-- 	private.cacheFrame:Hide()
+	-- 	-- Start a timer since we're over the limit of 50 items before waiting for it to recache
+	-- elseif (private.cacheFrame.endTime and numMail >= 50 and private.lastTotal ~= totalMail) or (numMail >= 50 and private.allowTimerStart) then
+	-- 	private.resetIndex = nil
+	-- 	private.allowTimerStart = nil
+	-- 	private.waitingForData = nil
+	-- 	private.lastTotal = totalMail
+	-- 	private.cacheFrame.endTime = GetTime() + 60
+	-- 	private.cacheFrame:Show()
+	-- end
 
 	-- The last item we setup to auto loot is finished, time for the next one
 	if not private.frame.buttonsEnabled then
-		if private.autoLootTotal ~= numMail then
-			private.autoLootTotal = GetInboxNumItems()
+		-- if private.autoLootTotal ~= numMail then
+		-- 	private.autoLootTotal = GetInboxNumItems()
 
 			-- If we're auto checking mail when new data is available, will wait and continue auto looting, otherwise we just stop now
-			if numMail == 0 and (not TSM.db.global.autoCheck or totalMail == 0) then
+			if totalMail == 0 then
 				private:StopAutoLooting()
 			else
 				private:AutoLoot()
@@ -350,7 +350,7 @@ function private:InboxUpdate()
 					return private:AutoLoot()
 				end
 			end)
-		end
+		-- end
 	end
 end
 
