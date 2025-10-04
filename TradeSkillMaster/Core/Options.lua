@@ -944,7 +944,7 @@ function private:LoadProfilesPage(container)
 			local _,_,itemID = itemString:find("item:(%d+)")
 			if itemID then
 				local item = Item:CreateFromID(itemID)
-				then item:Query()
+				item:Query()
 			end
 		end
 
