@@ -29,4 +29,5 @@ TSMAPI.SOULBOUND_MATS = {
 	-- ["item:98717:0:0:0:0:0:0"] = true, -- Balanced Trillium Ingot
 	-- ["item:98619:0:0:0:0:0:0"] = true, -- Celestial Cloth
 	-- ["item:98617:0:0:0:0:0:0"] = true, -- Hardened Magnificent Hide
+	["item:23572:0:0:0:0:0:0"] = true, -- Primal Nether
 }
