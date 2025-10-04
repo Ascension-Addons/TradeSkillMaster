@@ -939,16 +939,14 @@ function private:LoadProfilesPage(container)
 			end
 		end
 
-		local bulkquerybuffer = {}
 		for itemString, _ in pairs(TSM.db.profile.items) do
 			-- check if item is cached
 			local _,_,itemID = itemString:find("item:(%d+)")
 			if itemID then
 				local item = Item:CreateFromID(itemID)
-				if not item:IsCached() then bulkquerybuffer[#bulkquerybuffer+1] = item.itemID end
+				if not item:IsCached() then item:Query() end
 			end
 		end
-		TSMAPI:BulkQuery(bulkquerybuffer)
 
 		return profiles
 	end

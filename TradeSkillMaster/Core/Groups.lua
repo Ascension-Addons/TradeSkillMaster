@@ -1314,7 +1314,6 @@ function TSM:ImportGroup(importStr, groupPath)
 	end
 
 	local items = {}
-	local bulkquerybuffer = {}
 	local currentSubPath = ""
 	for _, str in ipairs(TSMAPI:SafeStrSplit(importStr, ",")) do
 		str = str:trim()
@@ -1338,12 +1337,11 @@ function TSM:ImportGroup(importStr, groupPath)
 		elseif itemString then
 			items[itemString] = currentSubPath
 			local item = Item:CreateFromID(tonumber(noSpaceStr))
-			if not item:IsCached() then bulkquerybuffer[#bulkquerybuffer+1] = item.itemID end
+			if not item:IsCached() then item:Query() end
 		else
 			return
 		end
 	end
-	TSMAPI:BulkQuery(bulkquerybuffer)
 
 	local num = 0
 	for itemString, subPath in pairs(items) do
