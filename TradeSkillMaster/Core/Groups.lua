@@ -1337,7 +1337,7 @@ function TSM:ImportGroup(importStr, groupPath)
 		elseif itemString then
 			items[itemString] = currentSubPath
 			local item = Item:CreateFromID(tonumber(noSpaceStr))
-			if not item:IsCached() then item:Query() end
+			item:Query()
 		else
 			return
 		end

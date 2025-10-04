@@ -240,7 +240,7 @@ function TSM:OnInitialize()
 		local _,_,itemID = itemString:find("item:(%d+)")
 		if itemID then
 			local item = Item:CreateFromID(itemID)
-			if not item:IsCached() then item:Query() end
+			item:Query()
 		end
 		if strfind(itemString, " ") then
 			local newItemString = gsub(itemString, " ", "")
