@@ -110,11 +110,12 @@ function Cost:GetLowestCraftPrices(itemString, intermediate)
 	if not spellIDs then return end
 	local lowestCost, cheapestSpellID
 	local soh = "item:76061:0:0:0:0:0:0" -- Spirit of Harmony
+	local fb = "item:800405:0:0:0:0:0:0" -- Fel Blood
 	for _, spellID in ipairs(spellIDs) do
 		if TSM.db.realm.crafts[spellID] then
-			if intermediate and (TSM.db.realm.crafts[spellID].mats[soh] or TSM.db.realm.crafts[spellID].hasCD) then
+			if intermediate and (TSM.db.realm.crafts[spellID].mats[soh] or TSM.db.realm.crafts[spellID].mats[fb] or TSM.db.realm.crafts[spellID].hasCD) then
 				break
-			end --exclude spells using SOH or have cooldown from intermediate crafts
+			end --exclude spells using SOH and FB or have cooldown from intermediate crafts
 			local cost = Cost:GetCraftCost(spellID)
 			if cost and (not lowestCost or cost < lowestCost) then
 				-- exclude spells with cooldown if option to ignore is enabled or more than one way to craft and not soulbound e.g. BoE
