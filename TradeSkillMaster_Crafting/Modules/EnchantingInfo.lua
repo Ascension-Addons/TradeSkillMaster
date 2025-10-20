@@ -9,6 +9,7 @@
 -- load the parent file (TSM) into a local variable
 local TSM = select(2, ...)
 
+-- [SPELL ID] = [SCROLL ID]
 TSM.enchantingName = GetSpellInfo(7411)
 
 -- looks up the itemID of the scroll that the enchant makes
@@ -703,6 +704,7 @@ TSM.enchantingItemIDs = {
 	[1968771] = 1204144, -- Scroll of Enchant Weapon - Overpowering Twisted Crusader
 	[355107]  = 354313,  -- Scroll of Enchant 2H Weapon - Leyline Conduit
 	[20044]  = 46510,   -- Scroll of Enchant Weapon - Strider
-	[201961]  = 44486,   -- Scroll of Enchant Gloves - Lesser Expertise
+	[44486]  = 201961,   -- Scroll of Enchant Gloves - Lesser Expertise
 }
+-- [SPELL ID] = [SCROLL ID]
 	
