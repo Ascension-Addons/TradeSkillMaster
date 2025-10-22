@@ -1315,6 +1315,7 @@ function TSM:ImportGroup(importStr, groupPath)
 
 	local items = {}
 	local currentSubPath = ""
+	local itemID, randomEnchant = nil, nil
 	for _, str in ipairs(TSMAPI:SafeStrSplit(importStr, ",")) do
 		str = str:trim()
 		local noSpaceStr = gsub(str, " ", "") -- forums like to add spaces
@@ -1327,7 +1328,7 @@ function TSM:ImportGroup(importStr, groupPath)
 		elseif strfind(noSpaceStr, "p") then
 			itemString = gsub(noSpaceStr, "p", "battlepet")
 		elseif strfind(noSpaceStr, ":") then
-			local itemID, randomEnchant = (":"):split(noSpaceStr)
+			itemID, randomEnchant = (":"):split(noSpaceStr)
 			if not tonumber(itemID) or not tonumber(randomEnchant) then return end
 			itemString = "item:"..tonumber(itemID)..":0:0:0:0:0:"..tonumber(randomEnchant)
 		end
@@ -1336,8 +1337,13 @@ function TSM:ImportGroup(importStr, groupPath)
 			currentSubPath = subPath
 		elseif itemString then
 			items[itemString] = currentSubPath
-			local item = Item:CreateFromID(tonumber(noSpaceStr))
-			item:Query()
+			itemID = itemID or noSpaceStr
+			if Item then
+				local item = Item:CreateFromID(tonumber(itemID))
+				item:Query()
+			else
+				TSMAPI:GetSafeItemInfo(tonumber(itemID))
+			end
 		else
 			return
 		end

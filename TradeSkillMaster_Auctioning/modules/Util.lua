@@ -221,6 +221,29 @@ function Util:groupTree(grpInfo, src, all, ah)
 			end
 			if newgrp[itemString] < 0 then
 				newgrp[itemString] = nil
+			else
+				-- Get the group's auction operation
+				local operations = TSMAPI:GetItemOperation(itemString, "Auctioning")
+				if operations and operations[1] then
+					local operation = TSM.operations[operations[1]]
+					if operation then
+						-- Get the prices
+						local prices = TSM.Util:GetItemPrices(operation, itemString)
+						local marketValue = TSMAPI:GetItemValue(itemString, "DBMarket")
+						local currentMinPrice = TSMAPI:GetItemValue(itemString, "DBMinBuyout")
+	
+						-- Compare the prices
+						if prices.minPrice and prices.maxPrice and prices.normalPrice then
+							if marketValue and currentMinPrice then
+								if prices.minPrice > currentMinPrice then
+									-- Handle the case where the prices do not meet the criteria
+									-- For example, you can remove the item from the group
+									newgrp[itemString] = nil
+								end
+							end
+						end
+					end
+				end
 			end
 		end
 	end
