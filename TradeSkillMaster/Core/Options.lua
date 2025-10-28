@@ -943,8 +943,12 @@ function private:LoadProfilesPage(container)
 			-- check if item is cached
 			local _,_,itemID = itemString:find("item:(%d+)")
 			if itemID then
-				local item = Item:CreateFromID(itemID)
-				item:Query()
+				if Item then
+					local item = Item:CreateFromID(itemID)
+					item:Query()
+				else
+					TSMAPI:GetSafeItemInfo(tonumber(itemID))
+				end
 			end
 		end
 

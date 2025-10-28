@@ -303,6 +303,7 @@ local Add = {
 				else
 					TSM:Print(L["Invalid custom price."].." "..err)
 					self:SetFocus()
+					return
 				end
 			else
 				args.callback(self, event, value)

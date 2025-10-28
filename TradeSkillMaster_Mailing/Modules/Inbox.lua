@@ -711,7 +711,7 @@ function Inbox:UI_ERROR_MESSAGE(event, msg)
 			return
 		end
 
-		TSMAPI:CreateTimeDelay("mailWaitDelay", 0.3, private.AutoLoot)
+		TSMAPI:CreateTimeDelay("mailWaitDelay", math.max(5/GetFramerate(), 0.3), private.AutoLoot)
 	end
 end
 
