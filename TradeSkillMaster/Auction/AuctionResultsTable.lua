@@ -467,7 +467,7 @@ local defaultColScripts = {
 	end,
 	
 	OnDoubleClick = function(self, ...)
-		if self.rt.disabled then return end
+		if self.rt.disabled or IsAltKeyDown() then return end
 		local data = self.row.data
 		if data.expandable then
 			self.rt:ToggleExpanded(data.itemString)
