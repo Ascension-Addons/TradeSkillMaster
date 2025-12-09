@@ -13,7 +13,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("TradeSkillMaster_ItemTracker")
 
 -- default values for the savedDB
 local savedDBDefaults = {
-	-- any global 
+	-- any global
 	global = {
 		tooltip = "simple",
 	},
@@ -23,6 +23,10 @@ local savedDBDefaults = {
 		characters = {},
 		guilds = {},
 		ignoreGuilds = {},
+		-- Ascension WoW: Personal banks (per character, stored by character name)
+		personalBanks = {},
+		-- Ascension WoW: Realm bank (shared across all characters on realm)
+		realmBank = { items = {}, lastUpdate = 0 },
 	},
 
 	-- data that is stored per user profile
@@ -47,6 +51,11 @@ local guildDefaults = {
 	items = {},
 	lastUpdate = 0,
 }
+-- Ascension WoW: Personal bank defaults (same structure as guild)
+local personalBankDefaults = {
+	items = {},
+	lastUpdate = 0,
+}
 
 -- Called once the player has loaded into the game
 -- Anything that needs to be done in order to initialize the addon should go here
@@ -58,9 +67,12 @@ function TSM:OnInitialize()
 
 	-- load the saved variables table into TSM.db
 	TSM.db = LibStub:GetLibrary("AceDB-3.0"):New("AscensionTSM_ItemTrackerDB", savedDBDefaults, true)
-	
+
 	TSM.characters = TSM.db.realm.characters
 	TSM.guilds = TSM.db.realm.guilds
+	-- Ascension WoW: Personal banks and realm bank
+	TSM.personalBanks = TSM.db.realm.personalBanks
+	TSM.realmBank = TSM.db.realm.realmBank
 	
 	-- handle connected realms for characters
 	local connectedRealms = TSMAPI.GetConnectedRealms and TSMAPI:GetConnectedRealms() or {}
@@ -117,6 +129,11 @@ function TSM:OnInitialize()
 	for _, guildData in pairs(TSM.guilds) do
 		ClearItemIDs(guildData.items)
 	end
+	-- Ascension WoW: Clean up personal banks and realm bank
+	for _, personalBankData in pairs(TSM.personalBanks) do
+		ClearItemIDs(personalBankData.items)
+	end
+	ClearItemIDs(TSM.realmBank.items)
 
 	TSM.Data:Initialize()
 	TSM:UpdatePlayerLookup()
@@ -151,6 +168,11 @@ function TSM:RegisterModule()
 		{ key = "guildtotal", callback = "GetGuildTotal" },
 		{ key = "playerguildtotal", callback = "GetPlayerGuildTotal" },
 		{ key = "playerguild", callback = "GetPlayerGuild" },
+		-- Ascension WoW: Personal banks and realm bank APIs
+		{ key = "personalbank", callback = "GetPersonalBank" },
+		{ key = "realmbank", callback = "GetRealmBank" },
+		{ key = "personalbankstotal", callback = "GetPersonalBanksTotal" },
+		{ key = "realmbanktotal", callback = "GetRealmBankTotal" },
 	}
 	--TSM.sync = { callback = "Sync:Callback" }
 	TSM.tooltipOptions = { callback = "Config:LoadTooltipOptions" }
@@ -169,9 +191,18 @@ function TSM:GetTooltip(itemString)
 		local player, alts = TSM:GetPlayerTotal(itemString)
 		local guild = TSM:GetGuildTotal(itemString)
 		local auctions = TSM:GetAuctionsTotal(itemString)
-		grandTotal = grandTotal + player + alts + guild + auctions
+		-- Ascension WoW: Add personal banks and realm bank
+		local personalBanks = TSM:GetPersonalBanksTotal(itemString)
+		local realmBank = TSM:GetRealmBankTotal(itemString)
+		grandTotal = grandTotal + player + alts + guild + auctions + personalBanks + realmBank
 		if grandTotal > 0 then
-			tinsert(text, { left = "  " .. "ItemTracker:", right = format(L["(%s player, %s alts, %s guild banks, %s AH)"], "|cffffffff" .. player .. "|r", "|cffffffff" .. alts .. "|r", "|cffffffff" .. guild .. "|r", "|cffffffff" .. auctions .. "|r") })
+			tinsert(text, { left = "  " .. "ItemTracker:", right = format(L["(%s player, %s alts, %s guild, %s AH, %s personal, %s realm)"],
+				"|cffffffff" .. player .. "|r",
+				"|cffffffff" .. alts .. "|r",
+				"|cffffffff" .. guild .. "|r",
+				"|cffffffff" .. auctions .. "|r",
+				"|cffffffff" .. personalBanks .. "|r",
+				"|cffffffff" .. realmBank .. "|r") })
 		end
 	elseif TSM.db.global.tooltip == "full" then
 		for name, data in pairs(TSM.characters) do
@@ -179,17 +210,26 @@ function TSM:GetTooltip(itemString)
 			local bank = data.bank[itemString] or 0
 			local auctions = data.auctions[itemString] or 0
 			local mail = data.mail[itemString] or 0
-			local total = bags + bank + auctions + mail
+			-- Ascension WoW: Add personal bank for this character
+			local personalBank = TSM.personalBanks[name] and TSM.personalBanks[name].items[itemString] or 0
+			local total = bags + bank + auctions + mail + personalBank
 			grandTotal = grandTotal + total
 
 			local bagText = "|cffffffff" .. bags .. "|r"
 			local bankText = "|cffffffff" .. bank .. "|r"
 			local auctionText = "|cffffffff" .. auctions .. "|r"
 			local mailText = "|cffffffff" .. mail .. "|r"
+			local personalBankText = "|cffffffff" .. personalBank .. "|r"
 			local totalText = "|cffffffff" .. total .. "|r"
 
 			if total > 0 then
-				tinsert(text, { left = format("  %s:", name), right = format(L["%s (%s bags, %s bank, %s AH, %s mail)"], "|cffffffff" .. totalText, "|cffffffff" .. bagText, "|cffffffff" .. bankText, "|cffffffff" .. auctionText, "|cffffffff" .. mailText) })
+				tinsert(text, { left = format("  %s:", name), right = format(L["%s (%s bags, %s bank, %s AH, %s mail, %s personal)"],
+					"|cffffffff" .. totalText,
+					"|cffffffff" .. bagText,
+					"|cffffffff" .. bankText,
+					"|cffffffff" .. auctionText,
+					"|cffffffff" .. mailText,
+					"|cffffffff" .. personalBankText) })
 			end
 		end
 
@@ -204,6 +244,14 @@ function TSM:GetTooltip(itemString)
 					tinsert(text, { left = format("  %s:", name), right = format(L["%s in guild bank"], gbankText) })
 				end
 			end
+		end
+
+		-- Ascension WoW: Show realm bank
+		local realmBank = TSM:GetRealmBankTotal(itemString)
+		if realmBank > 0 then
+			grandTotal = grandTotal + realmBank
+			local realmBankText = "|cffffffff" .. realmBank .. "|r"
+			tinsert(text, { left = "  " .. L["Realm Bank"] .. ":", right = format(L["%s in realm bank"], realmBankText) })
 		end
 	end
 
@@ -343,4 +391,31 @@ function TSM:GetPlayerGuild(player)
 	player = TSM.playerLookup[player] or player
 	if not player or not TSM.characters[player] then return end
 	return TSM.characters[player].guild
+end
+
+-- Ascension WoW: Get personal bank data for a player
+function TSM:GetPersonalBank(player)
+	player = player or TSM.CURRENT_PLAYER
+	player = TSM.playerLookup[player] or player
+	if not player or not TSM.personalBanks[player] then return end
+	return TSM.personalBanks[player].items
+end
+
+-- Ascension WoW: Get realm bank data
+function TSM:GetRealmBank()
+	return TSM.realmBank.items
+end
+
+-- Ascension WoW: Get total items across all personal banks
+function TSM:GetPersonalBanksTotal(itemString)
+	local total = 0
+	for _, data in pairs(TSM.personalBanks) do
+		total = total + (data.items[itemString] or 0)
+	end
+	return total
+end
+
+-- Ascension WoW: Get realm bank total for an item
+function TSM:GetRealmBankTotal(itemString)
+	return TSM.realmBank.items[itemString] or 0
 end
