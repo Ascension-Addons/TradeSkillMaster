@@ -2041,7 +2041,12 @@ function GUI:CreateGatheringSelectionFrame(parent)
 	dropdown:SetMultiselect(true)
 	dropdown:SetCallback("OnValueChanged", function(_, _, profession, value)
 		private.gather.professions[profession] = value or nil
-		GUI:UpdateGatherSelectionWindow()
+		-- Only update the button state, don't rebuild the dropdown list
+		if next(private.gather.professions) then
+			frame.gatherButton:Enable()
+		else
+			frame.gatherButton:Disable()
+		end
 	end)
 	frame.professionDropdown = dropdown
 

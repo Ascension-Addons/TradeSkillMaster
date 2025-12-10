@@ -5,3 +5,5 @@
 .lua/*
 .vscode
 .idea
+deploy.bat
+claude.md
