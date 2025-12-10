@@ -2622,8 +2622,19 @@ function GUI:GatheringEventHandler(event)
 	if not GUI.gatheringFrame or not GUI.gatheringFrame:IsShown() then return end
 
 	if event == "GUILDBANKFRAME_OPENED" then
-		private.currentSource = UnitName("player")
-		private.currentTask = L["Visit Guild Bank"]
+		-- Ascension WoW: Detect bank type based on first tab name
+		local numTabs = GetNumGuildBankTabs()
+		local firstTabName = numTabs > 0 and GetGuildBankTabInfo(1) or nil
+		if firstTabName == "Personal Bank" then
+			private.currentSource = UnitName("player")
+			private.currentTask = L["Visit Personal Bank"]
+		elseif firstTabName == "Realm Bank" then
+			private.currentSource = L["Realm Bank"]
+			private.currentTask = L["Visit Realm Bank"]
+		else
+			private.currentSource = UnitName("player")
+			private.currentTask = L["Visit Guild Bank"]
+		end
 	elseif event == "GUILDBANKFRAME_CLOSED" then
 		private.currentSource = nil
 		private.currentTask = nil
