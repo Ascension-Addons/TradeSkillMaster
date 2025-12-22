@@ -14,18 +14,14 @@ local AceGUI = LibStub("AceGUI-3.0") -- load the AceGUI libraries
 local lib = TSMAPI
 
 local bankType
-local ascensionBankType -- Ascension WoW: "personal", "realm", or nil for real guild bank
+local ascensionBankType
 local fullMoves, splitMoves, bagState = {}, {}, {}
 local callbackMsg = {}
 
--- Ascension WoW: Detect bank type based on first tab name
 local function GetAscensionBankType()
-	local numTabs = GetNumGuildBankTabs()
-	if numTabs == 0 then return nil end
-	local firstTabName = GetGuildBankTabInfo(1)
-	if firstTabName == "Personal Bank" then
+	if GuildBankFrame and GuildBankFrame.IsPersonalBank then
 		return "personal"
-	elseif firstTabName == "Realm Bank" then
+	elseif GuildBankFrame and GuildBankFrame.IsRealmBank then
 		return "realm"
 	end
 	return nil

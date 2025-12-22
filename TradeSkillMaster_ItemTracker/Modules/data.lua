@@ -78,21 +78,14 @@ function Data:ThrottleEvent(event)
 	throttleFrames[event]:Show()
 end
 
--- Ascension WoW bank type constants
 local BANK_TYPE_PERSONAL = "personal"
 local BANK_TYPE_REALM = "realm"
 local BANK_TYPE_GUILD = "guild"
 
--- Detect the type of bank currently open based on tab names
--- Ascension uses "Personal Bank" and "Realm Bank" as tab names for custom banks
 local function GetCurrentBankType()
-	local numTabs = GetNumGuildBankTabs()
-	if numTabs == 0 then return nil end
-
-	local firstTabName = GetGuildBankTabInfo(1)
-	if firstTabName == "Personal Bank" then
+	if GuildBankFrame and GuildBankFrame.IsPersonalBank then
 		return BANK_TYPE_PERSONAL
-	elseif firstTabName == "Realm Bank" then
+	elseif GuildBankFrame and GuildBankFrame.IsRealmBank then
 		return BANK_TYPE_REALM
 	else
 		return BANK_TYPE_GUILD
