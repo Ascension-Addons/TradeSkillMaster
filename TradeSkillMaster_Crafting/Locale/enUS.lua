@@ -21,6 +21,7 @@ L["<< Hide Queue"] = true
 L["<None>"] = true
 L["AH"] = true
 L["All"] = true
+L["Are you sure you want to clear the entire queue?"] = true
 L["Are you sure you want to reset all material prices to the default value?"] = true
 L["Ask Later"] = true
 L["Auction House"] = true

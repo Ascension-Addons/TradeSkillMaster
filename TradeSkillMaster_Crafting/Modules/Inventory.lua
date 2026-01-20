@@ -176,7 +176,7 @@
 			tinsert(task, { taskType = L["Visit Vendor"], items = items })
 			tinsert(sources, { sourceName = L["Vendor"], isCrafter = false, isVendor = true, isAH = false, tasks = task })
 		end
-	
+
 		-- double check if crafter already has all the items needed
 		local shortItems = {}
 		for itemString, quantity in pairs(neededMats) do
@@ -184,15 +184,20 @@
 			if TSMAPI.SOULBOUND_MATS[itemString] then
 				soulboundBagCount = GetItemCount(itemString)
 			end
-			local need = max(quantity - (crafterBags[itemString] or soulboundBagCount or 0), 0)
+			local inBags = crafterBags[itemString] or soulboundBagCount or 0
+			local need = max(quantity - inBags, 0)
 			if need > 0 then
 				shortItems[itemString] = need
 			end
 		end
-		if not next(shortItems) then return end
+		if not next(shortItems) then
+			return sources  -- Return sources instead of nil so vendor items are not lost
+		end
 	
 		-- add bags/bank/mail "tasks" for needed items of all non-ignored characters (always include crafter)
-		for _, player in pairs(TSMAPI:ModuleAPI("ItemTracker", "playerlist") or {}) do
+		local playerList = TSMAPI:ModuleAPI("ItemTracker", "playerlist") or {}
+
+		for _, player in pairs(playerList) do
 			if player == crafter or not TSM.db.global.ignoreCharacters[player] then
 				local task = {}
 				local bags = TSMAPI:ModuleAPI("ItemTracker", "playerbags", player) or {}
@@ -210,7 +215,7 @@
 				local mailItems = {}
 				local bagItems = {}
 				local personalBankItems = {}
-	
+
 				for itemString in pairs(neededMats) do
 					local soulboundBagCount, soulboundBankCount
 					if TSMAPI.SOULBOUND_MATS[itemString] then
@@ -272,6 +277,7 @@
 				end
 			end
 		end
+
 		-- Ascension WoW: add realm bank as a separate source
 		local realmBank = TSMAPI:ModuleAPI("ItemTracker", "realmbank") or {}
 		local realmBankTask = {}
@@ -287,7 +293,7 @@
 			tinsert(realmBankTask, { taskType = L["Visit Realm Bank"], items = realmBankItems })
 			tinsert(sources, { sourceName = L["Realm Bank"], isCrafter = false, isVendor = false, isAH = false, tasks = realmBankTask, isCurrent = true })
 		end
-	
+
 		-- add auction house tasks
 		local auctionTask = {}
 		local auctionItems = {}
@@ -308,10 +314,10 @@
 			tinsert(auctionTask, { taskType = L["Search for Mats"], items = auctionItems })
 			tinsert(sources, { sourceName = L["Auction House"], isCrafter = false, isVendor = false, isAH = true, tasks = auctionTask })
 		end
-	
+
 		-- add destroying tasks
 		local destroyingTask, millItems, prospectItems, transformItems, deItems = {}, {}, {}, {}, {}
-	
+
 		for itemString, quantity in pairs(neededMats) do
 			local need = max(quantity - (TSM.Inventory:GetTotalQuantity(itemString) or 0), 0)
 			-- conversion items
@@ -378,16 +384,26 @@
 	
 	
 		sort(sources, function(a, b)
-			if a.isCurrent then return true end
-			if b.isCurrent then return false end
-			if a.isAH then return false end
-			if b.isAH then return true end
-			if a.isVendor then return false end
-			if b.isVendor then return true end
-			if a.isCrafter then return false end
-			if b.isCrafter then return true end
+			-- isCurrent sources come first
+			if a.isCurrent ~= b.isCurrent then
+				return a.isCurrent
+			end
+			-- AH sources come last
+			if a.isAH ~= b.isAH then
+				return b.isAH
+			end
+			-- Vendor sources come near last (before AH)
+			if a.isVendor ~= b.isVendor then
+				return b.isVendor
+			end
+			-- Crafter sources come after other players
+			if a.isCrafter ~= b.isCrafter then
+				return b.isCrafter
+			end
+			-- Alphabetical by name
 			return a.sourceName < b.sourceName
 		end)
+
 		return sources
 	end
 	
