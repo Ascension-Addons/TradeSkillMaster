@@ -539,9 +539,13 @@ function GUI:CreateQueueFrame(parent)
 			end
 
 		end
+		-- Position tooltip next to the row, on left or right depending on screen position
 		GameTooltip:SetOwner(self, "ANCHOR_NONE")
-		-- GameTooltip:SetPoint("LEFT", self, "RIGHT")
-		GameTooltip:SetPoint("LEFT", self, "LEFT")
+		if self:GetRight() >= (GetScreenWidth() / 2) then
+			GameTooltip:SetPoint("TOPRIGHT", self, "TOPLEFT", -5, 0)
+		else
+			GameTooltip:SetPoint("TOPLEFT", self, "TOPRIGHT", 5, 0)
+		end
 		GameTooltip:AddLine(TSM.db.realm.crafts[data.spellID].name .. " (x" .. data.numQueued .. ")")
 
 		local cost = TSM.Cost:GetCraftPrices(data.spellID)
@@ -621,6 +625,8 @@ function GUI:CreateQueueFrame(parent)
 			name = color .. inventory .. "/" .. need .. "|r " .. name
 			GameTooltip:AddLine(name, 1, 1, 1)
 		end
+		GameTooltip:AddLine(" ")
+		GameTooltip:AddLine("|cff00ff00Ctrl+Click|r to remove from queue", 0.7, 0.7, 0.7)
 		GameTooltip:Show()
 	end
 
@@ -644,6 +650,13 @@ function GUI:CreateQueueFrame(parent)
 					TSM.db.realm.queueStatus.collapsed[data.profession] = not TSM.db.realm.queueStatus.collapsed[data.profession]
 				end
 				GUI:UpdateQueue()
+			elseif data.spellID and IsControlKeyDown() then
+				-- Ctrl+Left-Click: Remove item from queue
+				local craft = TSM.db.realm.crafts[data.spellID]
+				if craft then
+					craft.queued = 0
+					GUI:UpdateQueue()
+				end
 			elseif data.index then
 				GUI:CastTradeSkill(data.index, min(data.canCraft, data.numQueued), data.velName)
 			end
@@ -739,20 +752,31 @@ function GUI:CreateQueueFrame(parent)
 	btn:SetHeight(20)
 	btn:SetText(L["Clear Queue"])
 	btn:SetScript("OnClick", function()
-		TSM.Queue:ClearQueue()
-		GUI:UpdateQueue()
-		if GUI.frame.gather:IsVisible() then
-			GUI.frame.gather:Hide()
-		end
-		private.gather = {}
-		GUI:UpdateGatherSelectionWindow()
-		if GUI.gatheringFrame:IsShown() then
-			GUI.gatheringFrame:Hide()
-			TSM.db.realm.gathering.crafter = nil
-			TSM.db.realm.gathering.neededMats = {}
-			TSM.db.realm.gathering.gatheredMats = false
-			TSM.db.realm.sourceStatus.collapsed = {}
-		end
+		StaticPopupDialogs["TSM_CRAFTING_CLEAR_QUEUE"] = StaticPopupDialogs["TSM_CRAFTING_CLEAR_QUEUE"] or {
+			text = L["Are you sure you want to clear the entire queue?"],
+			button1 = YES,
+			button2 = CANCEL,
+			timeout = 0,
+			hideOnEscape = true,
+			OnAccept = function()
+				TSM.Queue:ClearQueue()
+				GUI:UpdateQueue()
+				if GUI.frame.gather:IsVisible() then
+					GUI.frame.gather:Hide()
+				end
+				private.gather = {}
+				GUI:UpdateGatherSelectionWindow()
+				if GUI.gatheringFrame:IsShown() then
+					GUI.gatheringFrame:Hide()
+					TSM.db.realm.gathering.crafter = nil
+					TSM.db.realm.gathering.neededMats = {}
+					TSM.db.realm.gathering.gatheredMats = false
+					TSM.db.realm.sourceStatus.collapsed = {}
+				end
+			end,
+			preferredIndex = 3,
+		}
+		TSMAPI:ShowStaticPopupDialog("TSM_CRAFTING_CLEAR_QUEUE")
 	end)
 	frame.clearBtn = btn
 
@@ -2041,7 +2065,12 @@ function GUI:CreateGatheringSelectionFrame(parent)
 	dropdown:SetMultiselect(true)
 	dropdown:SetCallback("OnValueChanged", function(_, _, profession, value)
 		private.gather.professions[profession] = value or nil
-		GUI:UpdateGatherSelectionWindow()
+		-- Only update the button state, don't rebuild the dropdown list
+		if next(private.gather.professions) then
+			frame.gatherButton:Enable()
+		else
+			frame.gatherButton:Disable()
+		end
 	end)
 	frame.professionDropdown = dropdown
 
@@ -2622,8 +2651,19 @@ function GUI:GatheringEventHandler(event)
 	if not GUI.gatheringFrame or not GUI.gatheringFrame:IsShown() then return end
 
 	if event == "GUILDBANKFRAME_OPENED" then
-		private.currentSource = UnitName("player")
-		private.currentTask = L["Visit Guild Bank"]
+		-- Ascension WoW: Detect bank type based on first tab name
+		local numTabs = GetNumGuildBankTabs()
+		local firstTabName = numTabs > 0 and GetGuildBankTabInfo(1) or nil
+		if firstTabName == "Personal Bank" then
+			private.currentSource = UnitName("player")
+			private.currentTask = L["Visit Personal Bank"]
+		elseif firstTabName == "Realm Bank" then
+			private.currentSource = L["Realm Bank"]
+			private.currentTask = L["Visit Realm Bank"]
+		else
+			private.currentSource = UnitName("player")
+			private.currentTask = L["Visit Guild Bank"]
+		end
 	elseif event == "GUILDBANKFRAME_CLOSED" then
 		private.currentSource = nil
 		private.currentTask = nil

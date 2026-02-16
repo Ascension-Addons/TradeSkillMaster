@@ -34,7 +34,7 @@ function Gather:gatherItems(source, task)
 
 	if source == L["Vendor"] then
 		Gather:BuyFromMerchant(items)
-	elseif source == UnitName("player") and (task == L["Visit Bank"] or task == L["Visit Guild Bank"]) then
+	elseif (source == UnitName("player") or source == L["Realm Bank"]) and (task == L["Visit Bank"] or task == L["Visit Guild Bank"] or task == L["Visit Personal Bank"] or task == L["Visit Realm Bank"]) then
 		Gather:GatherBank(items)
 	elseif source == UnitName("player") and task == L["Mail Items"] then
 		Gather:MailItems(items)

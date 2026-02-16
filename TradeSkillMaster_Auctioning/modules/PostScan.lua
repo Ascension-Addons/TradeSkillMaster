@@ -83,9 +83,9 @@ function Post:GetScanListAndSetup(GUIRef, options)
 	totalToPost, totalPosted, count = 0, 0, 0
 
 	local tempList, scanList = {}, {}
-	
+
 	Post:UpdateBagState()
-	
+
 	local function HasEnoughToPost(operation, itemString)
 		local maxStackSize = select(8, TSMAPI:GetSafeItemInfo(itemString)) or 1
 		local perAuction = min(maxStackSize, operation.stackSize)
@@ -129,7 +129,7 @@ function Post:GetScanListAndSetup(GUIRef, options)
 			tinsert(scanList, itemString)
 		end
 	end
-	
+
 	TSMAPI:FireEvent("AUCTIONING:POST:START", {numItems=#scanList, isGroup=true})
 	return scanList
 end

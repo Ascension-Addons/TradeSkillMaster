@@ -78,12 +78,32 @@ function Data:ThrottleEvent(event)
 	throttleFrames[event]:Show()
 end
 
+local BANK_TYPE_PERSONAL = "personal"
+local BANK_TYPE_REALM = "realm"
+local BANK_TYPE_GUILD = "guild"
+
+local function GetCurrentBankType()
+	if GuildBankFrame and GuildBankFrame.IsPersonalBank then
+		return BANK_TYPE_PERSONAL
+	elseif GuildBankFrame and GuildBankFrame.IsRealmBank then
+		return BANK_TYPE_REALM
+	else
+		return BANK_TYPE_GUILD
+	end
+end
+
+-- Store the current bank type when opened (persists until next open)
+local currentOpenBankType = nil
+
 function Data:EventHandler(event, fire)
 	if isScanning then return end
 	if fire ~= "FIRE" then
 		Data:ThrottleEvent(event)
 	else
 		if event == "GUILDBANKFRAME_OPENED" then
+			-- Detect and store the bank type
+			currentOpenBankType = GetCurrentBankType()
+
 			-- Query all tabs of the gbank to ensure all tabs will be scanned.
 			local initialTab = GetCurrentGuildBankTab()
 			for tab = 1, GetNumGuildBankTabs() do
@@ -93,7 +113,14 @@ function Data:EventHandler(event, fire)
 			end
 			QueryGuildBankTab(initialTab)
 		elseif event == "GUILDBANKBAGSLOTS_CHANGED" then
-			Data:GetGuildBankData()
+			-- Route to the appropriate handler based on bank type
+			if currentOpenBankType == BANK_TYPE_PERSONAL then
+				Data:GetPersonalBankData()
+			elseif currentOpenBankType == BANK_TYPE_REALM then
+				Data:GetRealmBankData()
+			else
+				Data:GetGuildBankData()
+			end
 		elseif event == "AUCTION_OWNED_LIST_UPDATE" then
 			Data:ScanPlayerAuctions()
 		end
@@ -128,7 +155,32 @@ function Data:GetBankData(state)
 	TSM.Sync:BroadcastUpdateRequest()
 end
 
--- scan the guild bank
+-- Helper function to scan all guild bank slots and return items table
+local function ScanGuildBankSlots()
+	local items = {}
+	local numTabs = GetNumGuildBankTabs()
+	for tab = 1, numTabs do
+		local name, icon, isViewable, canDeposit, numWithdrawals = GetGuildBankTabInfo(tab)
+		-- Ascension WoW: For Personal/Realm banks, always scan (numWithdrawals check may not apply)
+		local canAccess = (numWithdrawals and numWithdrawals > 0) or IsGuildLeader(UnitName("player")) or (name == "Personal Bank") or (name == "Realm Bank")
+		if canAccess then
+			for slot = 1, MAX_GUILDBANK_SLOTS_PER_TAB or 98 do
+				local itemString = TSMAPI:GetItemString(GetGuildBankItemLink(tab, slot))
+				local baseItemString = TSMAPI:GetBaseItemString(GetGuildBankItemLink(tab, slot))
+				if itemString then
+					local quantity = select(2, GetGuildBankItemInfo(tab, slot))
+					items[itemString] = (items[itemString] or 0) + quantity
+					if itemString ~= baseItemString then
+						items[baseItemString] = (items[baseItemString] or 0) + quantity
+					end
+				end
+			end
+		end
+	end
+	return items
+end
+
+-- scan the guild bank (real guild bank only)
 function Data:GetGuildBankData()
 	if not TSM.CURRENT_GUILD then
 		Data:StoreCurrentGuildInfo(true)
@@ -136,23 +188,49 @@ function Data:GetGuildBankData()
 	end
 	wipe(TSM.guilds[TSM.CURRENT_GUILD].items)
 
-	for tab = 1, GetNumGuildBankTabs() do
-		if select(5, GetGuildBankTabInfo(tab)) > 0 or IsGuildLeader(UnitName("player")) then
-			for slot = 1, MAX_GUILDBANK_SLOTS_PER_TAB or 98 do
-				local itemString = TSMAPI:GetItemString(GetGuildBankItemLink(tab, slot))
-				local baseItemString = TSMAPI:GetBaseItemString(GetGuildBankItemLink(tab, slot))
-				if itemString then
-					local quantity = select(2, GetGuildBankItemInfo(tab, slot))
-					TSM.guilds[TSM.CURRENT_GUILD].items[itemString] = (TSM.guilds[TSM.CURRENT_GUILD].items[itemString] or 0) + quantity
-					if itemString ~= baseItemString then
-						TSM.guilds[TSM.CURRENT_GUILD].items[baseItemString] = (TSM.guilds[TSM.CURRENT_GUILD].items[baseItemString] or 0) + quantity
-					end
-				end
-			end
-		end
+	local items = ScanGuildBankSlots()
+	for itemString, quantity in pairs(items) do
+		TSM.guilds[TSM.CURRENT_GUILD].items[itemString] = quantity
 	end
+
 	if GuildBankFrame and GuildBankFrame:IsVisible() then
 		TSM.guilds[TSM.CURRENT_GUILD].lastUpdate = time()
+	end
+	TSM.Sync:BroadcastUpdateRequest()
+end
+
+-- Ascension WoW: scan the personal bank (per character)
+function Data:GetPersonalBankData()
+	-- Initialize personal bank for current player if needed
+	if not TSM.personalBanks[TSM.CURRENT_PLAYER] then
+		TSM.personalBanks[TSM.CURRENT_PLAYER] = { items = {}, lastUpdate = 0 }
+	end
+	wipe(TSM.personalBanks[TSM.CURRENT_PLAYER].items)
+
+	local items = ScanGuildBankSlots()
+	for itemString, quantity in pairs(items) do
+		TSM.personalBanks[TSM.CURRENT_PLAYER].items[itemString] = quantity
+	end
+
+	TSM.personalBanks[TSM.CURRENT_PLAYER].lastUpdate = time()
+	TSM.Sync:BroadcastUpdateRequest()
+end
+
+-- Ascension WoW: scan the realm bank (shared across realm)
+function Data:GetRealmBankData()
+	-- Initialize realm bank if needed
+	if not TSM.realmBank.items then
+		TSM.realmBank.items = {}
+	end
+	wipe(TSM.realmBank.items)
+
+	local items = ScanGuildBankSlots()
+	for itemString, quantity in pairs(items) do
+		TSM.realmBank.items[itemString] = quantity
+	end
+
+	if GuildBankFrame and GuildBankFrame:IsVisible() then
+		TSM.realmBank.lastUpdate = time()
 	end
 	TSM.Sync:BroadcastUpdateRequest()
 end

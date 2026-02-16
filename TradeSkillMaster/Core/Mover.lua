@@ -14,8 +14,18 @@ local AceGUI = LibStub("AceGUI-3.0") -- load the AceGUI libraries
 local lib = TSMAPI
 
 local bankType
+local ascensionBankType
 local fullMoves, splitMoves, bagState = {}, {}, {}
 local callbackMsg = {}
+
+local function GetAscensionBankType()
+	if GuildBankFrame and GuildBankFrame.IsPersonalBank then
+		return "personal"
+	elseif GuildBankFrame and GuildBankFrame.IsRealmBank then
+		return "realm"
+	end
+	return nil
+end
 
 -- this is a set of wrapper functions so that I can switch
 -- between guildbank and bank function easily (taken from warehousing)
@@ -42,6 +52,7 @@ function TSM:OnEnable()
 
 	TSM:RegisterEvent("GUILDBANKFRAME_OPENED", function(event)
 		bankType = "guildbank"
+		ascensionBankType = GetAscensionBankType() -- Ascension WoW: detect personal/realm bank
 	end)
 
 	TSM:RegisterEvent("BANKFRAME_OPENED", function(event)
@@ -50,6 +61,7 @@ function TSM:OnEnable()
 
 	TSM:RegisterEvent("GUILDBANKFRAME_CLOSED", function(event, addon)
 		bankType = nil
+		ascensionBankType = nil -- Ascension WoW: reset
 		TSM:UnregisterEvent("GUILDBANKBAGSLOTS_CHANGED")
 	end)
 
@@ -402,13 +414,23 @@ function TSM.generateMoves(includeSoulbound)
 
 	if next(fullMoves) ~= nil then
 		if bankType == "guildbank" then
-			TSMAPI:CreateTimeDelay("moveItem", 0.05, TSM.moveItem, 0.35)
+			-- Ascension WoW: Personal/Realm banks don't need slow delays like real guild banks
+			if ascensionBankType then
+				TSMAPI:CreateTimeDelay("moveItem", 0.05, TSM.moveItem, 0.05)
+			else
+				TSMAPI:CreateTimeDelay("moveItem", 0.05, TSM.moveItem, 0.35)
+			end
 		else
 			TSMAPI:CreateTimeDelay("moveItem", 0.05, TSM.moveItem, 0.05)
 		end
 	elseif next(splitMoves) ~= nil then
 		if bankType == "guildbank" then
-			TSMAPI:CreateTimeDelay("moveSplitItem", 0.05, TSM.moveSplitItem, 0.75)
+			-- Ascension WoW: Personal/Realm banks don't need slow delays like real guild banks
+			if ascensionBankType then
+				TSMAPI:CreateTimeDelay("moveSplitItem", 0.05, TSM.moveSplitItem, 0.1)
+			else
+				TSMAPI:CreateTimeDelay("moveSplitItem", 0.05, TSM.moveSplitItem, 0.75)
+			end
 		else
 			TSMAPI:CreateTimeDelay("moveSplitItem", 0.05, TSM.moveSplitItem, 0.4)
 		end

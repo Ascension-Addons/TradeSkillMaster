@@ -14,9 +14,13 @@ local L = LibStub("AceLocale-3.0"):NewLocale("TradeSkillMaster_ItemTracker", "en
 if not L then return end
 
 L["%s (%s bags, %s bank, %s AH, %s mail)"] = true
+L["%s (%s bags, %s bank, %s AH, %s mail, %s personal)"] = true
 L["%s in guild bank"] = true
+L["%s in realm bank"] = true
 L["%s item(s) total"] = true
 L["(%s player, %s alts, %s guild banks, %s AH)"] = true
+L["(%s player, %s alts, %s guild, %s AH, %s personal, %s realm)"] = true
+L["Realm Bank"] = true
 L["AH"] = true
 L["Bags"] = true
 L["Bank"] = true
