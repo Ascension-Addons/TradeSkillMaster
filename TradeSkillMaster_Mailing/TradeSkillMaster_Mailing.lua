@@ -59,7 +59,7 @@ end
 
 -- registers this module with TSM by first setting all fields and then calling TSMAPI:NewModule().
 function TSM:RegisterModule()
-	TSM.operations = {maxOperations=12, callbackOptions="Options:Load", callbackInfo="GetOperationInfo"}
+	TSM.operations = {maxOperations=100, callbackOptions="Options:Load", callbackInfo="GetOperationInfo"}
 	TSM.moduleAPIs = {
 		{key="mailItems", callback="AutoMail:SendItems"},
 	}
